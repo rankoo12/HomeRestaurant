@@ -1,0 +1,38 @@
+# Local development infrastructure — Postgres + Redis only.
+# The apps themselves run on the host (npm run dev), not in Docker.
+# See docs/specs/phases/01-foundation.md.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: home-restaurant-postgres
+    environment:
+      POSTGRES_USER: hr
+      POSTGRES_PASSWORD: hr
+      POSTGRES_DB: home_restaurant
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hr -d home_restaurant']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: home-restaurant-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
