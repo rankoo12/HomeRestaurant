@@ -153,18 +153,18 @@ Atomic primitives already designed: `Icon`, `Logo`, `FoodImage`, `Avatar`, `Star
 
 ---
 
-## Local Development (to be filled in as the scaffold lands)
+## Local Development
 
 ```bash
-# Backend (Fastify API)
-cd backend && npm install && npm run dev
-
-# Frontend (Next.js)
-cd frontend && npm install && npm run dev
-
 # Infrastructure (Postgres + Redis as Docker containers)
-docker-compose up -d
+docker compose up -d
+
+# Backend (Fastify API) — http://localhost:4000, GET /health
+cd backend && cp .env.example .env && npm install && npm run dev
+
+# Frontend (Next.js) — http://localhost:3000
+cd frontend && cp .env.example .env.local && npm install && npm run dev
 ```
 
-> These commands are the intended shape; the scaffold, migrations, and `.env.example` are created in a later step.
-> Update this section when the actual scripts exist.
+Verify a workspace: `npm run typecheck && npm run lint` (backend also `npm test`; frontend also `npm run build`).
+Migrations and seeds (`db:migrate`, `db:seed`) arrive in Phase 2.

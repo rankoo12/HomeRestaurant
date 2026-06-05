@@ -3,6 +3,14 @@
 Fastify + Node.js + TypeScript. The single source of truth for data, auth, and money.
 Never imports from `frontend/`. See the root [`CLAUDE.md`](../CLAUDE.md) for the rules.
 
+## Run it
+```bash
+cp .env.example .env       # configure
+npm install
+npm run dev                # Fastify on http://localhost:4000  (GET /health)
+npm run typecheck && npm run lint && npm test
+```
+
 ## Folder map
 
 | Path | Purpose |

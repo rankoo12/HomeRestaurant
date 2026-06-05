@@ -14,6 +14,7 @@
 |---|---|---|
 | [Home_Dining_Platform_Pages_Spec.md](./Home_Dining_Platform_Pages_Spec.md) | ✅ Authored | Full page/route architecture across all portals + edge states. |
 | [phases/00-master-plan.md](./phases/00-master-plan.md) | ✅ Authored | The 8-phase delivery roadmap, branch-per-phase, dependency graph. |
+| [tooling-and-conventions.md](./tooling-and-conventions.md) | ✅ Authored | Runtime, TS/lint config, scripts, git/commit conventions, CI. *(Phase 1)* |
 
 ## Phase specs
 
@@ -38,7 +39,6 @@ should begin on one of these until its spec exists.
 
 | Planned spec | Domain |
 |---|---|
-| `tooling-and-conventions.md` | tsconfig strictness, ESLint ruleset, npm scripts, branch/commit conventions, CI. *(Phase 1)* |
 | `identity-and-rbac.md` | Auth (JWT/OAuth2), sessions, roles (guest/host/admin), route guards. |
 | `chef-onboarding-and-verification.md` | Host onboarding wizard, KYC submission, admin verification queue state machine. |
 | `events.md` | Event lifecycle: create/edit/publish/unpublish/cancel, capacity, scheduling. |

@@ -3,6 +3,14 @@
 Next.js (App Router) + Tailwind + **Atomic Design**. Never imports from `backend/`; talks to the API
 only through the proxy. See the root [`CLAUDE.md`](../CLAUDE.md) for the rules.
 
+## Run it
+```bash
+cp .env.example .env.local  # configure
+npm install
+npm run dev                 # Next.js on http://localhost:3000
+npm run typecheck && npm run lint && npm run build
+```
+
 ## Folder map
 
 | Path | Purpose |
