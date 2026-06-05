@@ -1,0 +1,392 @@
+
+Home restaurant
+Ran Eckstein and Inbar Halutzy
+Introduction
+
+The sharing economy has enabled the development of peer-to-peer digital platforms that provide personalized and experience-based services. In the domain of hospitality and food, this trend has led to the emergence of home-based dining platforms, offering authentic culinary experiences hosted by private individuals.This project presents a web-based Home-Based Dining Platform developed by Inbar Halutzy and Ran Eckstein. The platform enables users to discover, reserve, and attend dining events hosted by verified home-based chefs, while emphasizing usability, trust, scalability, and secure transaction management. The following document consolidates the literature review, project analysis, functional and technological requirements, and detailed system design, providing a structured foundation for implementation and evaluation.
+
+
+
+
+
+
+
+
+
+
+Literature Review: Home-Based Dining Platform 
+
+1. Introduction
+This literature review surveys existing academic research, conceptual frameworks, and technological contexts relevant to the development of a webbased application enabling users to reserve dining experiences hosted by homebased chefs. The platform aligns with the broader domain of the sharing economy, peertopeer service platforms, and foodrelated experience marketplaces.
+Recent studies also explore social-dining platforms directly. For example, Davies et al. (2022) examine P2P dining events hosted through platforms like VizEat and EatWith, highlighting key themes such as authenticity, privacy, and host–guest expectations.
+Davies, A., Cretella, A., Edwards, F., & Marovelli, B. (2022). "The social practices of hosting P2P social dining events." Journal of Sustainable Tourism.
+
+
+2. The Sharing Economy
+2.1 Definition and Core Principles
+Research widely defines the sharing economy as a digitalmediated ecosystem in which individuals share access to goods, services, and skills through peertopeer interactions. Scholars such as Belk (2014) and Hamari et al. (2016) highlight principles including resource optimization, decentralization, and reliance on trustbased reputation systems.
+2.2 Relevance to Home Dining Platforms
+Homebased dining experiences extend these principles by allowing individuals to monetize culinary expertise and domestic spaces. Studies on peertopeer hospitality platforms, such as Airbnb, show that users seek personalized, authentic, and culturally immersive experiences rather than standardized commercial services. Similar trends in foodrelated platforms highlight host identity, social connection, and cultural value as primary motivators for participation.
+
+3. Trust and Safety in PeertoPeer Service Platforms
+3.1 Trust Mechanisms
+Research consistently indicates that trust is a fundamental determinant of user adoption in peertopeer systems. Verified identities, transparent rating systems, detailed host profiles, and platformmediated messaging contribute significantly to reducing uncertainty and increasing user confidence. These mechanisms are especially critical in hospitality and foodrelated contexts where safety and personal interaction are central.
+3.2 Risk Perception and Mitigation
+Studies emphasize that concerns around health standards, personal safety, and social comfort must be mitigated through a combination of technological safeguards (e.g., identity verification), procedural rules (e.g., cancellation and hygiene policies), and social mechanisms (e.g., community guidelines and host vetting). Such elements have been shown to enhance perceived platform reliability.
+3.3 Food Safety and Public Health Regulations
+Peertopeer food services raise questions about food safety standards, licensing, and liability. Research by Koopman et al. (2015) discusses how emerging sharingeconomy platforms often operate in grey regulatory zones, requiring updated frameworks to ensure consumer protection.
+Koopman, M., Mitchell, M., & Thierer, A. (2015). "The Sharing Economy and Consumer Protection Regulation: The Case for Policy Change." Mercatus Center Working Paper.
+
+
+4. User Experience (UX) and Consumer Behavior in FoodRelated Applications
+4.1 UX in Food and Hospitality Applications
+Literature on UX design in hospitality and foodservice applications stresses clarity, visual appeal, intuitive navigation, and minimal booking friction. Researchers identify that users expect highquality imagery, structured chef or host profiles, clear availability indicators, and responsive interfaces, all of which play a crucial role in forming trust and enhancing satisfaction.
+4.2 DecisionMaking in Food Experience Platforms
+Research on consumer behavior in foodexperience platforms identifies several decision factors: dish presentation, host credibility, social proof through ratings and reviews, dietary transparency, and clear pricing structures. These cues shape user expectations and directly influence booking likelihood.
+
+5. Competitor Analysis
+Several platforms illustrate how home-dining and experiential food services operate and what users expect.
+5.1 EatWith - A leading platform connecting guests with home-based chefs.Strengths: Strong brand; verified hosts; quality visuals; secure booking.Weaknesses: Limited regional coverage; higher fees.
+5.2 VizEat - Former European social-dining platform (now merged into EatWith).Strengths: Cultural immersion; broad European host base.Weaknesses: Reduced independence; limited global reach.
+5.3 HomeFood (Italy) – Focused on traditional, home-cooked Italian meals.Strengths: Authenticity and cultural value.Weaknesses: Limited scalability and technology.
+5.4 InsightsAcross competitors, users consistently value:
+Verified, trustworthy hosts
+Clear visuals and descriptive profiles
+Smooth booking and secure payment
+Authentic and personalized experiences
+These insights highlight gaps such as better support for small local chefs and richer communication between chefs and guests.
+
+6. Existing Technologies and System Architecture
+Building a homedining reservation platform requires selecting technologies that support scalability, user trust, realtime availability, and secure transactions.
+6.1 Frontend Technologies (Web-Oriented)
+Key technologies for building a web-based platform include:
+React – for building a responsive, component-based UI.
+TypeScript – improves reliability and long-term maintainability.
+Next.js (optional) – adds routing and performance optimizations.
+Tailwind CSS – enables fast and consistent styling.
+6.2 Backend Technologies
+Possible backend stacks include:
+Node.js (Express/NestJS) – unified JavaScript/TypeScript environment.
+Django (Python) – strong built-in tools and secure REST development.
+Spring Boot (Java) – suitable for large-scale, strongly-typed systems.
+
+6.3 Data Storage and State Management
+PostgreSQL – reliable for transactional data like bookings and payments.
+MongoDB – flexible schema for chef profiles and menus.
+Redis – improves performance through caching and fast lookups.
+6.4 Payment and Booking Infrastructure
+Stripe or PayPal – secure handling of online payments.
+Custom booking logic – manages availability, cancellations, and time-zone consistency.
+6.5 Security, Authentication, and Trust Technology
+JWT/OAuth2 – secure session and identity management.
+KYC verification - optional identity checks for chefs.
+RBAC – separates permissions for chefs, users, and admins.
+6.6 Software Engineering Principles and Long-Term Architecture
+SOLID principles – support modular, extensible design.
+Layered/hexagonal architecture – separates domain logic from infrastructure.
+Clean code and tooling - ensures consistency in a year-long project.
+Automated testing + CI - maintains system reliability during growth.
+
+7. Summary of Insights
+Key themes emerging from the literature include the necessity of strong trust mechanisms, the value of personalization and cultural authenticity, the importance of streamlined UX design, and the growing consumer desire for unique experiential dining. These insights collectively shape the conceptual and technological requirements for developing a successful homedining reservation application.
+Project Analysis: Home-Based Dining Platform
+
+1. Introduction
+This document analyses the feasibility, competitors, and technological alternatives for a web-based platform facilitating home-cooked dining experiences. The analysis is based on the Literature Review and aims to define the development strategy, emphasizing competitive advantage and appropriate technology selection.
+2. Competitor Analysis & Existing Solutions
+Based on Section 5 of the Literature Review, the following is a comparison between leading platforms in the P2P dining market.
+
+
+
+
+
+
+
+
+
+
+Comparison Criteria
+
+EatWith
+
+VizEat (Merged)
+
+HomeFood (Italy)
+
+
+
+
+Our Platform (Target)
+
+General Description
+
+Market leader connecting guests with home chefs.
+
+
+Focused on social hosting and cultural immersion.
+
+Focuses on highly traditional and authentic Italian food.
+
+Community-driven platform making home dining accessible with a focus on UX.
+
+Strengths
+
+Strong brand, verified hosts, high-quality visuals, secure booking system.
+
+Broad host base in Europe, cultural experience.
+
+High authenticity, preservation of cooking traditions.
+
+Modern UX, personalization, accessible pricing for locals.
+
+Weaknesses
+
+High fees, limited regional coverage in some parts of the world.
+
+Limited host independence (post-merger), less visible globally as a separate brand.
+
+Outdated technology, limited scalability.
+
+Lack of initial user base (Cold Start), need to build trust from scratch.
+
+Trust & Safety
+
+High - Strict identity verification and review system.
+
+Medium-High.
+
+Community-based, fewer technological mechanisms.
+
+High - Implementation of KYC (Identity Verification) and transparent rating system.
+
+User Experience (UX)
+
+Excellent - Professional photos, clean interface.
+
+Reasonable.
+
+Low - Outdated interface.
+
+Excellent - Fast SPA (React), clean and intuitive design.
+
+
+
+
+
+
+
+
+
+
+
+
+Implications for Development
+Based on the analysis above, we have defined our project strategy:
+Technological Opportunity (UX Focus):
+Finding: Authentic competitors like HomeFood suffer from outdated technology.
+Action: We will build a fast Single Page Application (SPA) using React, providing a smooth browsing experience on our website to attract users expecting high technological standards.
+
+
+Trust Mechanisms as a Core Feature:
+Finding: The literature (Section 3) indicates that trust is the main barrier in the sharing economy.
+Action: We will implement detailed chef profiles including identity verification and build a reliable review system as an integral part of the booking process.
+Business Differentiation (AI Innovation):
+Finding: Existing competitors do not offer advanced tools for chefs to create marketing content.
+Action: Use ML/AI to automatically generate dish descriptions and personalize event recommendations for guests.
+
+3. Technology Alternatives & Architecture
+This section analyzes the technological components selected for the project (as presented in Literature Review Section 6) against possible alternatives, justifying the choices.
+A. Frontend
+Choice: React (with Tailwind CSS).
+Alternative Considered: Angular or Server-Side Templates (e.g., EJS/Jinja).
+Comparative Analysis:
+React: Allows modular development (Components), has a vast community, and offers excellent performance.
+Angular: A heavier framework with a steep learning curve unsuitable for the project's timeline.
+Templates: Do not provide the required interactivity and speed (e.g., page transitions without reloading).
+Decision: React, due to flexibility and development speed.
+
+B. Backend
+Choice: Python (Django / FastAPI).
+Alternative Considered: Node.js or Java (Spring Boot).
+Comparative Analysis:
+Python: Highly readable language enabling fast and efficient development. Libraries like Django offer "batteries-included" solutions for security and user management. Additionally, Python is the leading language for AI integrations.
+Node.js: While allowing a unified language with the client side, it is less native for advanced AI and Data Science tools.
+Decision: Python, due to tool maturity, personal experience and excellent AI support.
+C. Database
+Choice: PostgreSQL.
+Alternative Considered: MongoDB (NoSQL).
+Comparative Analysis:
+PostgreSQL: Relational Database (SQL). Since the system deals with bookings, payments, and inventory (available seats), full data consistency (ACID Compliance) and clear relationships between tables (User -> Booking -> Event) are required.
+MongoDB: Flexible for schema changes but less safe for managing complex financial transactions.
+Decision: PostgreSQL.
+D. Advanced Features (AI & ML Integration)
+Need
+Improving user experience and creating added value for chefs and guests by automating creative tasks and personalizing interactions.
+
+
+Solution: Hybrid AI Architecture (Local & General ML)
+Instead of relying solely on a single external Cloud API, the platform will utilize a hybrid approach combining Local Large Language Models (LLMs) for text generation and Classical Machine Learning for data analysis. This ensures user privacy, reduces recurring API costs, and allows for offline capabilities where possible.
+Technology Stack
+GenAI (Text & Creative): Local LLMs (e.g., Llama 3 or Mistral) running via inference engines like Ollama or Hugging Face Transformers.
+Predictive ML (Matching): Scikit-learn or TensorFlow for recommendation algorithms.
+Use Cases
+1. AI Menu Assistant (Generative AI / Local LLM)
+A tool to assist chefs in the creative process of menu creation without sending proprietary data to the cloud.
+Functionality:
+Description Generator: Creates mouth-watering descriptions for dishes based on a list of ingredients using a fine-tuned local model.
+Smart Substitutions: Suggests alternatives for common allergens (e.g., suggesting flax egg instead of egg) using semantic knowledge.
+Localization: Instantly translates menus into multiple languages while preserving culinary nuance.
+Benefit: Zero marginal cost per token, high data privacy for chefs' intellectual property.
+2. Smart Guest Match (Classical ML / Recommender System)
+A data-driven recommendation engine that connects guests with events they are most likely to book, based on behavioral analysis rather than simple filtering.
+Functionality:
+Collaborative Filtering: Analyzes booking history to find users with similar tastes and recommends events they liked.
+Content-Based Filtering: Matches guest culinary preferences (tags, spicy tolerance, dietary restrictions) with event metadata.
+Dynamic Scoring: Ranks available events in real-time based on the likelihood of conversion.
+Benefit: Higher conversion rates and a more personalized user experience compared to generic search.
+
+
+
+
+
+
+
+
+4. Work Plan & Schedule (Gantt)
+4.1 Project Scope
+Before detailing tasks, here are the project boundaries:
+In Scope: Web Application, User & Event Management, Booking & Payment System.
+Out of Scope: Native Mobile App, Real-time Chat System.
+
+4.2 Annual Plan: Dec - June
+left67703900The project spans 5-7 months (December to June), allowing for in-depth development and quality assurance.
+
+
+
+
+
+4.3 Milestones (Updated for 6-Month Schedule)
+Design & Architecture Locked: End of Month 1.
+Deliverables: UI/UX Mockups, Database Schema (ERD), and Technical Specifications complete.
+Infrastructure & Foundation Ready: End of Month 2.
+Deliverables: Development environment set up (Docker/Git), Authentication system live, and Frontend Skeleton (App Shell) deployed.
+Core MVP (Alpha Release): End of Month 4.
+Deliverables: Full Event Management (CRUD) operational (Month 3) AND complex Booking Flow logic finalized (Month 4). Users can successfully view, create, and book events.
+Feature Complete (Beta Release): End of Month 5.
+Deliverables: Payment processing (Stripe) integration, Social features (Reviews/Messaging), and AI-powered recommendations implementation complete.
+Final Launch (Production): End of Month 6.
+Deliverables: Comprehensive QA testing finished, critical bugs fixed, performance optimization, and final deployment to production environment (Live URL).
+
+
+
+
+
+Functional and Technological RequirementsHome-Based Dining Platform
+1. Introduction
+This document defines the functional and technological requirements for the Home-Based Dining Platform. The platform is a web-based peer-to-peer system that enables users to discover, reserve, and participate in home-hosted dining experiences offered by verified home-based chefs. The document serves as a formal specification guiding system development, validation, and evaluation.
+2. Stakeholders and User Roles
+Stakeholders include platform administrators, home-based chefs (hosts), guests (end users), payment service providers, and regulatory authorities.User Roles:• Guest/User – Browses dining experiences, makes reservations, submits reviews.• Chef/Host – Creates and manages dining events and menus.• Administrator – Oversees verification, moderation, and analytics.
+3. Functional Requirements
+User Management:• User registration using email and password.• Secure authentication and session management.• Role-based access control.Chef Verification and Onboarding:• Chef profile creation.• Identity and food safety verification.• Manual administrative approval.Dining Experience Management:• Event creation, editing, and cancellation.• Capacity management and prevention of overbooking.Search, Booking, and Payments:• Browsing, search, and filtering of experiences.• Secure reservation and payment processing.• Booking confirmations and notifications.Reviews and Administration:• Review submission and moderation.• Administrative dashboard and content moderation.
+4. Non-Functional Requirements
+Security:• Encryption of sensitive data in transit and at rest.• Compliance with web security best practices.Performance:• Support for concurrent users without degradation.• Optimized page load times.Usability and Scalability:• Intuitive and accessible user interface.• Designed to support future growth.
+5. Technological Requirements
+Frontend:• Web-based UI using modern JavaScript frameworks.• Responsive design for major browsers.Backend:• Server-side application with RESTful APIs.Database:• Relational or document-based database with backup mechanisms.Authentication and Payments:• Token-based authentication (JWT).• Integration with third-party payment providers.Deployment:• Cloud hosting environment.• Logging and monitoring support.
+6. Constraints and Assumptions
+• Compliance with local food and business regulations.• Internet access required for all users.• Reliability of third-party services.
+7. Conclusion
+This document outlines the functional and technological requirements for the Home-Based Dining Platform and provides a structured foundation for implementation, testing, and evaluation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Project Detailed Design: Home-Based Dining Platform
+Student Names: Inbar Halutzy and Ran Eckstein.
+1. Objectives & Scope
+The objective of this document is to present the detailed technical design of the Home-Based Dining Platform. The document describes the system architecture, core modules, database schema, API specifications, and key business logic. The platform aims to connect guests with authentic home-based dining experiences using a scalable, secure, and maintainable web-based architecture.
+2. System Architecture
+2.1 High-Level Architecture
+The system follows a Service-Oriented Architecture (SOA), divided into logical layers to ensure scalability, security, and ease of maintenance.
+Client Layer:
+Web Client: A Single Page Application (SPA) developed using React and Tailwind CSS, optimized for web usage while remaining responsive for mobile browsers.
+Gateway Layer:
+Load Balancer: Distributes incoming traffic across backend servers to ensure high availability and fault tolerance.
+Application Layer (Backend):
+API Server Cluster: Implemented using Node.js (Express/NestJS) to provide RESTful services and business logic.
+Data Layer:
+PostgreSQL for transactional and relational data, and Redis for in-memory caching and session management.
+
+2.2 Technology Stack
+Component
+Technology
+Justification
+Frontend
+React + Tailwind CSS
+Component-based UI and rapid styling
+Backend
+Node.js (Express/NestJS)
+Non-blocking I/O and scalability
+Database
+PostgreSQL
+ACID compliance for financial transactions
+Cache
+Redis
+High-performance in-memory caching
+Infrastructure
+Docker
+Consistent and portable deployments
+3. Modular Decomposition
+The backend system is divided into modular services, each responsible for a specific domain of functionality.
+3.1 User Module
+Responsible for authentication, authorization, and user profile management. Supports role-based access control for Guests, Hosts, and Administrators.
+3.2 Booking Engine
+Manages event availability, seat allocation, and booking lifecycle. Implements concurrency control to prevent over-booking.
+3.3 Payment Module
+Handles secure payment processing via third-party gateways such as Stripe, including refunds and host payouts while maintaining PCI compliance.
+4. Database Schema Design (PostgreSQL)
+The database schema is normalized to maintain data integrity and consistency.
+4.1 Core Entities
+Users, Events, and Bookings form the core entities of the system.
+4.2 Key Tables
+Users: Stores authentication and role information.Events: Stores dining events created by hosts.Bookings: Links guests to events and tracks payment and booking status.
+5. API Specification
+The platform exposes a RESTful API for client-server communication.
+Method
+Endpoint
+Description
+Auth Required
+POST
+/api/auth/login
+Authenticate user and return JWT
+No
+GET
+/api/events
+Retrieve available events
+No
+POST
+/api/events
+Create new dining event
+Yes (Host)
+POST
+/api/bookings
+Create booking
+Yes (Guest)
+GET
+/api/users/me
+Get current user profile
+Yes
+6. Logic & Pseudocode
+The booking flow is the most critical logic in the system and requires transaction management.
+The process includes checking cached availability, locking database records using transactions, processing payments, and updating both the database and cache accordingly.
+7. Technical Trade-offs & Evaluation
+PostgreSQL was selected over NoSQL alternatives due to strong ACID guarantees, which are essential for financial transactions and inventory consistency.
+Node.js was chosen over Python-based solutions due to its non-blocking I/O model and shared language between frontend and backend.
