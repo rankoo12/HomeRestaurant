@@ -7,6 +7,8 @@ import { registerHealthRoutes } from './routes/health.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerUserRoutes } from './routes/users.js';
 import { registerRbacProbeRoutes } from './routes/rbac-probe.js';
+import { registerEventRoutes } from './routes/events.js';
+import { registerChefRoutes } from './routes/chefs.js';
 
 /**
  * Builds the Fastify application. Kept separate from the server entrypoint so
@@ -26,6 +28,8 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   await registerAuthRoutes(app);
   await registerUserRoutes(app);
   await registerRbacProbeRoutes(app);
+  await registerEventRoutes(app);
+  await registerChefRoutes(app);
 
   return app;
 }

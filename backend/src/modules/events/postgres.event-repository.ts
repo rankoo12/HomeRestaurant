@@ -1,7 +1,31 @@
 import { getPool, withTransaction } from '../../db/index.js';
 import type { Queryable } from '../../db/index.js';
 import type { Event, EventCourse, EventWithDetails, NewEvent } from '../../types/index.js';
-import type { EventListFilters, EventRepository } from './interfaces.js';
+import type {
+  DiscoveryQuery,
+  DiscoveryResult,
+  EventListFilters,
+  EventListItem,
+  EventRepository,
+} from './interfaces.js';
+
+interface DiscoveryRow {
+  id: string;
+  slug: string;
+  title: string;
+  cuisine: string;
+  neighborhood: string;
+  starts_at: Date;
+  price_cents: number;
+  seats_total: number;
+  seats_left: number;
+  image_seed: number;
+  chef_slug: string;
+  chef_name: string;
+  chef_avatar_seed: number;
+  chef_rating: string;
+  chef_is_superhost: boolean;
+}
 
 interface EventRow {
   id: string;
@@ -102,40 +126,60 @@ export class PostgresEventRepository implements EventRepository {
   }
 
   async list(filters: EventListFilters = {}, db: Queryable = getPool()): Promise<Event[]> {
-    const where: string[] = [];
-    const params: unknown[] = [];
-
-    if (filters.status) {
-      params.push(filters.status);
-      where.push(`status = $${params.length}`);
-    }
-    if (filters.chefId) {
-      params.push(filters.chefId);
-      where.push(`chef_id = $${params.length}`);
-    }
-    if (filters.cuisine) {
-      params.push(filters.cuisine);
-      where.push(`cuisine = $${params.length}`);
-    }
-    if (typeof filters.maxPriceCents === 'number') {
-      params.push(filters.maxPriceCents);
-      where.push(`price_cents <= $${params.length}`);
-    }
-    if (filters.tags && filters.tags.length > 0) {
-      params.push(filters.tags);
-      params.push(filters.tags.length);
-      // Event must carry every requested tag.
-      where.push(
-        `id IN (SELECT event_id FROM event_tags WHERE label = ANY($${params.length - 1}::text[])
-                GROUP BY event_id HAVING COUNT(DISTINCT label) = $${params.length})`,
-      );
-    }
-
+    const { clauses, params } = buildEventFilters(filters, 'events');
     const sql = `SELECT * FROM events
-                 ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+                 ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
                  ORDER BY starts_at ASC`;
     const { rows } = await db.query<EventRow>(sql, params);
     return rows.map(mapRow);
+  }
+
+  async listForDiscovery(
+    query: DiscoveryQuery,
+    db: Queryable = getPool(),
+  ): Promise<DiscoveryResult> {
+    const { clauses, params } = buildEventFilters(query, 'e');
+    const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+
+    const orderBy =
+      query.sort === 'price'
+        ? 'e.price_cents ASC'
+        : query.sort === 'top-rated'
+          ? 's.rating DESC NULLS LAST'
+          : 'e.starts_at ASC';
+
+    const limit = query.limit ?? 24;
+    const offset = query.offset ?? 0;
+
+    const base = `
+      FROM events e
+      JOIN chef_profiles cp ON cp.user_id = e.chef_id
+      JOIN users u ON u.id = e.chef_id
+      LEFT JOIN chef_stats s ON s.chef_id = e.chef_id
+      ${where}`;
+
+    const countRes = await db.query<{ total: string }>(
+      `SELECT COUNT(*)::int AS total ${base}`,
+      params,
+    );
+    const total = Number(countRes.rows[0]?.total ?? 0);
+
+    const limitParam = params.length + 1;
+    const offsetParam = params.length + 2;
+    const rowsRes = await db.query<DiscoveryRow>(
+      `SELECT
+         e.id, e.slug, e.title, e.cuisine, e.neighborhood, e.starts_at,
+         e.price_cents, e.seats_total, (e.seats_total - e.seats_booked) AS seats_left,
+         e.image_seed,
+         cp.slug AS chef_slug, u.full_name AS chef_name, u.avatar_seed AS chef_avatar_seed,
+         COALESCE(s.rating, 0) AS chef_rating, cp.is_superhost AS chef_is_superhost
+       ${base}
+       ORDER BY ${orderBy}
+       LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      [...params, limit, offset],
+    );
+
+    return { items: rowsRes.rows.map(mapDiscoveryRow), total };
   }
 
   /** Loads courses + tags for an event and returns the detail shape. */
@@ -163,4 +207,66 @@ export class PostgresEventRepository implements EventRepository {
 
     return { ...event, courses: mappedCourses, tags: tags.rows.map((t) => t.label) };
   }
+}
+
+/**
+ * Builds parameterized WHERE clauses from event filters. `table` is the alias
+ * to qualify columns (`events` for the plain list, `e` for the joined query).
+ * The tag subquery always references the base `events` id via the alias.
+ */
+function buildEventFilters(
+  filters: EventListFilters,
+  table: string,
+): { clauses: string[]; params: unknown[] } {
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.status) {
+    params.push(filters.status);
+    clauses.push(`${table}.status = $${params.length}`);
+  }
+  if (filters.chefId) {
+    params.push(filters.chefId);
+    clauses.push(`${table}.chef_id = $${params.length}`);
+  }
+  if (filters.cuisine) {
+    params.push(filters.cuisine);
+    clauses.push(`${table}.cuisine = $${params.length}`);
+  }
+  if (typeof filters.maxPriceCents === 'number') {
+    params.push(filters.maxPriceCents);
+    clauses.push(`${table}.price_cents <= $${params.length}`);
+  }
+  if (filters.tags && filters.tags.length > 0) {
+    params.push(filters.tags);
+    params.push(filters.tags.length);
+    clauses.push(
+      `${table}.id IN (SELECT event_id FROM event_tags WHERE label = ANY($${params.length - 1}::text[])
+              GROUP BY event_id HAVING COUNT(DISTINCT label) = $${params.length})`,
+    );
+  }
+
+  return { clauses, params };
+}
+
+function mapDiscoveryRow(row: DiscoveryRow): EventListItem {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    cuisine: row.cuisine,
+    neighborhood: row.neighborhood,
+    startsAt: row.starts_at,
+    priceCents: row.price_cents,
+    seatsTotal: row.seats_total,
+    seatsLeft: row.seats_left,
+    imageSeed: row.image_seed,
+    chef: {
+      slug: row.chef_slug,
+      name: row.chef_name,
+      avatarSeed: row.chef_avatar_seed,
+      rating: Number(row.chef_rating),
+      isSuperhost: row.chef_is_superhost,
+    },
+  };
 }

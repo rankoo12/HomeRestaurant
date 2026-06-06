@@ -1,3 +1,5 @@
+'use client';
+
 import { cn } from '@/lib/cn';
 import { Avatar, Button, Icon, Price, Stars } from '@/components/atoms';
 import { FoodImage } from './food-image';

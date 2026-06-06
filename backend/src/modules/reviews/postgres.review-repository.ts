@@ -1,7 +1,7 @@
 import { getPool } from '../../db/index.js';
 import type { Queryable } from '../../db/index.js';
 import type { NewReview, Review } from '../../types/index.js';
-import type { ReviewRepository } from './interfaces.js';
+import type { ReviewRepository, ReviewWithAuthor } from './interfaces.js';
 
 interface ReviewRow {
   id: string;
@@ -57,4 +57,57 @@ export class PostgresReviewRepository implements ReviewRepository {
     );
     return rows.map(mapRow);
   }
+
+  async listByChefWithAuthor(
+    chefId: string,
+    limit = 20,
+    db: Queryable = getPool(),
+  ): Promise<ReviewWithAuthor[]> {
+    const { rows } = await db.query<AuthorRow>(
+      `SELECT r.id, r.rating, r.body, r.created_at,
+              u.full_name AS author_name, u.avatar_seed AS author_avatar_seed
+         FROM reviews r JOIN users u ON u.id = r.author_id
+        WHERE r.chef_id = $1
+        ORDER BY r.created_at DESC
+        LIMIT $2`,
+      [chefId, limit],
+    );
+    return rows.map(mapAuthorRow);
+  }
+
+  async listByEventWithAuthor(
+    eventId: string,
+    limit = 20,
+    db: Queryable = getPool(),
+  ): Promise<ReviewWithAuthor[]> {
+    const { rows } = await db.query<AuthorRow>(
+      `SELECT r.id, r.rating, r.body, r.created_at,
+              u.full_name AS author_name, u.avatar_seed AS author_avatar_seed
+         FROM reviews r JOIN users u ON u.id = r.author_id
+        WHERE r.event_id = $1
+        ORDER BY r.created_at DESC
+        LIMIT $2`,
+      [eventId, limit],
+    );
+    return rows.map(mapAuthorRow);
+  }
+}
+
+interface AuthorRow {
+  id: string;
+  rating: number;
+  body: string;
+  created_at: Date;
+  author_name: string;
+  author_avatar_seed: number;
+}
+
+function mapAuthorRow(row: AuthorRow): ReviewWithAuthor {
+  return {
+    id: row.id,
+    rating: row.rating,
+    body: row.body,
+    createdAt: row.created_at,
+    author: { name: row.author_name, avatarSeed: row.author_avatar_seed },
+  };
 }

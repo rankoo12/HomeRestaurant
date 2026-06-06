@@ -6,7 +6,7 @@ import type {
   ChefProfileWithStats,
   NewChefProfile,
 } from '../../types/index.js';
-import type { ChefRepository } from './interfaces.js';
+import type { ChefRepository, PublicChefProfile } from './interfaces.js';
 
 interface ChefRow {
   user_id: string;
@@ -115,4 +115,82 @@ export class PostgresChefRepository implements ChefRepository {
     );
     return rows.map((r) => ({ id: r.id, chefId: r.chef_id, label: r.label }));
   }
+
+  async findPublicBySlug(slug: string, db: Queryable = getPool()): Promise<PublicChefProfile | null> {
+    return this.findPublic('cp.slug = $1', slug, db);
+  }
+
+  async findPublicByUserId(
+    userId: string,
+    db: Queryable = getPool(),
+  ): Promise<PublicChefProfile | null> {
+    return this.findPublic('cp.user_id = $1', userId, db);
+  }
+
+  /** Shared public-profile assembly: profile + user display + stats + badges. */
+  private async findPublic(
+    whereClause: string,
+    param: string,
+    db: Queryable,
+  ): Promise<PublicChefProfile | null> {
+    const { rows } = await db.query<PublicChefRow>(
+      `SELECT cp.slug, u.full_name AS name, u.avatar_seed,
+              cp.city, cp.cuisine, cp.tagline, cp.bio, cp.cover_seed,
+              cp.is_superhost, cp.hosting_since, cp.verification_status,
+              COALESCE(s.rating, 0) AS rating, COALESCE(s.review_count, 0) AS review_count,
+              COALESCE(s.dinners_hosted, 0) AS dinners_hosted
+         FROM chef_profiles cp
+         JOIN users u ON u.id = cp.user_id
+         LEFT JOIN chef_stats s ON s.chef_id = cp.user_id
+        WHERE ${whereClause}`,
+      [param],
+    );
+    const row = rows[0];
+    if (!row) return null;
+
+    const badges = await db.query<{ label: string }>(
+      `SELECT cb.label FROM chef_badges cb
+         JOIN chef_profiles cp ON cp.user_id = cb.chef_id
+        WHERE cp.slug = $1 ORDER BY cb.label`,
+      [row.slug],
+    );
+
+    return {
+      slug: row.slug,
+      name: row.name,
+      avatarSeed: row.avatar_seed,
+      city: row.city,
+      cuisine: row.cuisine,
+      tagline: row.tagline,
+      bio: row.bio,
+      coverSeed: row.cover_seed,
+      isSuperhost: row.is_superhost,
+      hostingSince: row.hosting_since,
+      verificationStatus: row.verification_status,
+      stats: {
+        chefId: row.slug, // public view keys stats by slug; internal id not exposed
+        rating: Number(row.rating),
+        reviewCount: Number(row.review_count),
+        dinnersHosted: Number(row.dinners_hosted),
+      },
+      badges: badges.rows.map((b) => b.label),
+    };
+  }
+}
+
+interface PublicChefRow {
+  slug: string;
+  name: string;
+  avatar_seed: number;
+  city: string;
+  cuisine: string;
+  tagline: string;
+  bio: string;
+  cover_seed: number;
+  is_superhost: boolean;
+  hosting_since: number | null;
+  verification_status: ChefProfile['verificationStatus'];
+  rating: string;
+  review_count: string;
+  dinners_hosted: string;
 }
