@@ -49,9 +49,18 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U hr -d home_restaurant_test"
           --health-interval 5s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 5
     env:
       NODE_ENV: test
       TEST_DATABASE_URL: postgres://hr:hr@localhost:5432/home_restaurant_test
+      REDIS_URL: redis://localhost:6379/1
+      JWT_SECRET: ci-test-secret-key-not-for-production
     steps:
       - uses: actions/checkout@v4
 

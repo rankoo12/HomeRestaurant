@@ -12,4 +12,13 @@ export interface UserRepository {
   create(input: NewUser, db?: Queryable): Promise<User>;
   findById(id: string, db?: Queryable): Promise<User | null>;
   findByEmail(email: string, db?: Queryable): Promise<User | null>;
+  /**
+   * Login-only: returns the user plus the password hash. The hash is kept out
+   * of the `User` domain type so it can't leak through ordinary reads; this is
+   * the single sanctioned way to obtain it, used by the auth service.
+   */
+  findByEmailWithHash(
+    email: string,
+    db?: Queryable,
+  ): Promise<{ user: User; passwordHash: string | null } | null>;
 }
