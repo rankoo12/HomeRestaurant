@@ -1,56 +1,30 @@
 import Link from 'next/link';
+import { Button } from '@/components/atoms';
 
 /**
- * 403 Forbidden — shown when a user reaches an area their role can't access
- * (e.g. a guest hitting /host or /admin). Functional Phase-3 version; final
- * styling with the other edge states in Phase 8.
+ * 403 Forbidden — shown when a user reaches an area their role can't access.
+ * Final edge-state styling is consolidated in Phase 8.
  */
 export default function ForbiddenPage() {
   return (
-    <section
-      style={{
-        minHeight: '60vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: '80px 32px',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 420 }}>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--text-3)',
-          }}
-        >
-          403
-        </span>
-        <h1 style={{ fontFamily: 'var(--serif)', fontSize: 32 }}>You don&apos;t have access</h1>
-        <p style={{ color: 'var(--text-2)', fontSize: 15 }}>
+    <section className="grid min-h-[60vh] place-items-center px-8 py-20 text-center">
+      <div className="flex max-w-[420px] flex-col items-center gap-3">
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-text-3">403</span>
+        <h1 className="font-serif text-[32px]">You don&apos;t have access</h1>
+        <p className="text-[15px] text-text-2">
           This area is restricted. If you think you should have access, log in with the right account.
         </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 8 }}>
-          <Link href="/login" style={linkButton}>
-            Log in
+        <div className="mt-2 flex gap-3">
+          <Link href="/login">
+            <Button size="sm">Log in</Button>
           </Link>
-          <Link href="/events" style={{ ...linkButton, background: 'transparent', color: 'var(--gold)' }}>
-            Browse dinners
+          <Link href="/events">
+            <Button variant="ghost" size="sm">
+              Browse dinners
+            </Button>
           </Link>
         </div>
       </div>
     </section>
   );
 }
-
-const linkButton: React.CSSProperties = {
-  background: 'var(--gold)',
-  color: 'var(--on-gold)',
-  borderRadius: 99,
-  padding: '10px 18px',
-  fontSize: 14,
-  fontWeight: 600,
-  textDecoration: 'none',
-};

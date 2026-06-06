@@ -22,9 +22,13 @@ const config: Config = {
         'text-3': 'var(--text-3)',
         gold: 'var(--gold)',
         'gold-2': 'var(--gold-2)',
+        'gold-soft': 'var(--gold-soft)',
+        'gold-line': 'var(--gold-line)',
         terra: 'var(--terra)',
+        'terra-soft': 'var(--terra-soft)',
         wine: 'var(--wine)',
         sage: 'var(--sage)',
+        'sage-soft': 'var(--sage-soft)',
         'on-gold': 'var(--on-gold)',
       },
       fontFamily: {
