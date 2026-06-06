@@ -16,6 +16,7 @@
 | [phases/00-master-plan.md](./phases/00-master-plan.md) | ✅ Authored | The 8-phase delivery roadmap, branch-per-phase, dependency graph. |
 | [tooling-and-conventions.md](./tooling-and-conventions.md) | ✅ Authored | Runtime, TS/lint config, scripts, git/commit conventions, CI. *(Phase 1)* |
 | [data/](./data/00-index.md) | ✅ Authored | **Spec tree** — database schema & domain model, split by domain (ERD, identity, chef, events, booking, payments, reviews, constraints). *(Phase 2)* |
+| [identity/](./identity/00-index.md) | ✅ Authored | **Spec tree** — auth & RBAC: flows, token/session model, RBAC route matrix, password policy. *(Phase 3)* |
 
 ## Phase specs
 
@@ -25,7 +26,7 @@ Each phase has a stub here; its detailed required specs (below) are authored whe
 |---|---|---|
 | 1 | [phases/01-foundation.md](./phases/01-foundation.md) | ✅ Complete |
 | 2 | [phases/02-data.md](./phases/02-data.md) | ✅ Complete |
-| 3 | [phases/03-identity.md](./phases/03-identity.md) | 📝 Stub |
+| 3 | [phases/03-identity.md](./phases/03-identity.md) | ✅ Complete |
 | 4 | [phases/04-design-system.md](./phases/04-design-system.md) | 📝 Stub |
 | 5 | [phases/05-discovery.md](./phases/05-discovery.md) | 📝 Stub |
 | 6 | [phases/06-booking.md](./phases/06-booking.md) | 📝 Stub |
