@@ -6,6 +6,7 @@ import type { UserRepository } from './interfaces.js';
 interface UserRow {
   id: string;
   email: string;
+  password_hash: string | null;
   role: User['role'];
   full_name: string;
   phone: string | null;
@@ -61,5 +62,15 @@ export class PostgresUserRepository implements UserRepository {
   async findByEmail(email: string, db: Queryable = getPool()): Promise<User | null> {
     const { rows } = await db.query<UserRow>('SELECT * FROM users WHERE email = $1', [email]);
     return rows[0] ? mapRow(rows[0]) : null;
+  }
+
+  async findByEmailWithHash(
+    email: string,
+    db: Queryable = getPool(),
+  ): Promise<{ user: User; passwordHash: string | null } | null> {
+    const { rows } = await db.query<UserRow>('SELECT * FROM users WHERE email = $1', [email]);
+    const row = rows[0];
+    if (!row) return null;
+    return { user: mapRow(row), passwordHash: row.password_hash };
   }
 }
