@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button, Input } from '@/components/atoms';
 
 /**
  * Login page. Posts to the proxy (/api/proxy/auth/login), which sets httpOnly
- * cookies. On success, redirects to the guest dashboard. Phase-3 functional UI;
- * the design-system restyle lands in Phase 4.
+ * cookies. On success, redirects to the guest dashboard.
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -39,70 +39,37 @@ export default function LoginPage() {
   }
 
   return (
-    <section style={{ maxWidth: 380, margin: '80px auto', padding: '0 24px' }}>
-      <h1 style={{ fontFamily: 'var(--serif)', fontSize: 30, marginBottom: 8 }}>Welcome back</h1>
-      <p style={{ color: 'var(--text-2)', marginBottom: 24 }}>Log in to your Home Restaurant account.</p>
+    <section className="mx-auto mt-20 max-w-[380px] px-6">
+      <h1 className="mb-2 font-serif text-[30px]">Welcome back</h1>
+      <p className="mb-6 text-text-2">Log in to your Home Restaurant account.</p>
 
-      <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14 }}>
-          Email
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={inputStyle}
-          />
-        </label>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14 }}>
-          Password
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={inputStyle}
-          />
-        </label>
-
-        {error && (
-          <p role="alert" style={{ color: 'var(--terra)', fontSize: 13.5 }}>
-            {error}
-          </p>
-        )}
-
-        <button type="submit" disabled={submitting} style={buttonStyle}>
+      <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
+        <Input
+          label="Email"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Input
+          label="Password"
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={error ?? undefined}
+        />
+        <Button type="submit" block size="lg" disabled={submitting} className="mt-1.5">
           {submitting ? 'Logging in…' : 'Log in'}
-        </button>
+        </Button>
       </form>
 
-      <p style={{ marginTop: 18, fontSize: 14, color: 'var(--text-2)' }}>
+      <p className="mt-[18px] text-sm text-text-2">
         New here?{' '}
-        <Link href="/signup" style={{ color: 'var(--gold)' }}>
+        <Link href="/signup" className="text-gold">
           Create an account
         </Link>
       </p>
     </section>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  border: '1px solid var(--line-strong)',
-  borderRadius: 'var(--r-sm)',
-  padding: '10px 12px',
-  background: 'var(--surface)',
-  color: 'var(--text)',
-  fontSize: 15,
-};
-
-const buttonStyle: React.CSSProperties = {
-  marginTop: 6,
-  background: 'var(--gold)',
-  color: 'var(--on-gold)',
-  border: 0,
-  borderRadius: 99,
-  padding: '12px 18px',
-  fontSize: 15,
-  fontWeight: 600,
-  cursor: 'pointer',
-};
