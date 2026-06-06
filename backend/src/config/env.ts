@@ -21,14 +21,29 @@ const envSchema = z
     // PostgreSQL connection string. Required outside tests (unit tests that
     // never touch the DB can run without it); the DB layer asserts presence.
     DATABASE_URL: z.string().url().optional(),
+    // Redis — refresh-token store (Phase 3). Required outside tests.
+    REDIS_URL: z.string().url().optional(),
+    // Auth (Phase 3). JWT_SECRET signs access tokens; required outside tests.
+    JWT_SECRET: z.string().min(16).optional(),
+    ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900), // 15 min
+    REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(604800), // 7 days
   })
   .superRefine((env, ctx) => {
-    if (env.NODE_ENV !== 'test' && !env.DATABASE_URL) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['DATABASE_URL'],
-        message: 'DATABASE_URL is required when NODE_ENV is not "test"',
-      });
+    const requiredOutsideTest: Array<keyof typeof env> = [
+      'DATABASE_URL',
+      'REDIS_URL',
+      'JWT_SECRET',
+    ];
+    if (env.NODE_ENV !== 'test') {
+      for (const key of requiredOutsideTest) {
+        if (!env[key]) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} is required when NODE_ENV is not "test"`,
+          });
+        }
+      }
     }
   });
 
