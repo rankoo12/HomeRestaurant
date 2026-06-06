@@ -1,0 +1,65 @@
+import { getPool } from '../../db/index.js';
+import type { Queryable } from '../../db/index.js';
+import type { NewUser, User } from '../../types/index.js';
+import type { UserRepository } from './interfaces.js';
+
+interface UserRow {
+  id: string;
+  email: string;
+  role: User['role'];
+  full_name: string;
+  phone: string | null;
+  dietary_prefs: string[];
+  avatar_seed: number;
+  is_suspended: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+function mapRow(row: UserRow): User {
+  return {
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    fullName: row.full_name,
+    phone: row.phone,
+    dietaryPrefs: row.dietary_prefs,
+    avatarSeed: row.avatar_seed,
+    isSuspended: row.is_suspended,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export class PostgresUserRepository implements UserRepository {
+  async create(input: NewUser, db: Queryable = getPool()): Promise<User> {
+    const { rows } = await db.query<UserRow>(
+      `INSERT INTO users (email, password_hash, role, full_name, phone, dietary_prefs, avatar_seed)
+       VALUES ($1, $2, COALESCE($3::user_role, 'guest'), $4, $5,
+               COALESCE($6::text[], '{}'), COALESCE($7::integer, 0))
+       RETURNING *`,
+      [
+        input.email,
+        input.passwordHash ?? null,
+        input.role ?? null,
+        input.fullName,
+        input.phone ?? null,
+        input.dietaryPrefs ?? null,
+        input.avatarSeed ?? null,
+      ],
+    );
+    const row = rows[0];
+    if (!row) throw new Error('users INSERT returned no row');
+    return mapRow(row);
+  }
+
+  async findById(id: string, db: Queryable = getPool()): Promise<User | null> {
+    const { rows } = await db.query<UserRow>('SELECT * FROM users WHERE id = $1', [id]);
+    return rows[0] ? mapRow(rows[0]) : null;
+  }
+
+  async findByEmail(email: string, db: Queryable = getPool()): Promise<User | null> {
+    const { rows } = await db.query<UserRow>('SELECT * FROM users WHERE email = $1', [email]);
+    return rows[0] ? mapRow(rows[0]) : null;
+  }
+}

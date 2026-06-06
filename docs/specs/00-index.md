@@ -15,6 +15,7 @@
 | [Home_Dining_Platform_Pages_Spec.md](./Home_Dining_Platform_Pages_Spec.md) | ✅ Authored | Full page/route architecture across all portals + edge states. |
 | [phases/00-master-plan.md](./phases/00-master-plan.md) | ✅ Authored | The 8-phase delivery roadmap, branch-per-phase, dependency graph. |
 | [tooling-and-conventions.md](./tooling-and-conventions.md) | ✅ Authored | Runtime, TS/lint config, scripts, git/commit conventions, CI. *(Phase 1)* |
+| [data/](./data/00-index.md) | ✅ Authored | **Spec tree** — database schema & domain model, split by domain (ERD, identity, chef, events, booking, payments, reviews, constraints). *(Phase 2)* |
 
 ## Phase specs
 
@@ -22,8 +23,8 @@ Each phase has a stub here; its detailed required specs (below) are authored whe
 
 | Phase | Spec | Status |
 |---|---|---|
-| 1 | [phases/01-foundation.md](./phases/01-foundation.md) | 📝 Stub |
-| 2 | [phases/02-data.md](./phases/02-data.md) | 📝 Stub |
+| 1 | [phases/01-foundation.md](./phases/01-foundation.md) | ✅ Complete |
+| 2 | [phases/02-data.md](./phases/02-data.md) | ✅ Complete |
 | 3 | [phases/03-identity.md](./phases/03-identity.md) | 📝 Stub |
 | 4 | [phases/04-design-system.md](./phases/04-design-system.md) | 📝 Stub |
 | 5 | [phases/05-discovery.md](./phases/05-discovery.md) | 📝 Stub |
@@ -46,4 +47,3 @@ should begin on one of these until its spec exists.
 | `payments.md` | Stripe checkout, refunds, host payouts (Connect), payment-failure handling. |
 | `reviews-and-moderation.md` | Review submission, aggregation onto chef profiles, admin moderation. |
 | `design-system.md` | Design tokens, theme toggle, Atomic Design component inventory. |
-| `database-schema.md` | ERD: Users, Events, Bookings, Reviews, Verifications, Payments. |

@@ -13,20 +13,27 @@
     "start": "node dist/api/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "jest",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.mjs --runInBand",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed.ts",
     "format": "prettier --write ."
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
+    "dotenv": "^16.6.1",
     "fastify": "^5.1.0",
+    "pg": "^8.21.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.1",
+    "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.16.0",
     "jest": "^29.7.0",
     "prettier": "^3.4.2",

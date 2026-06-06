@@ -7,11 +7,10 @@ export default {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
-    '^.+\\.ts$': [
-      'ts-jest',
-      { useESM: true, isolatedModules: true, tsconfig: { verbatimModuleSyntax: false } },
-    ],
+    '^.+\\.ts$': ['ts-jest', { useESM: true, tsconfig: { verbatimModuleSyntax: false } }],
   },
   testMatch: ['**/__tests__/**/*.test.ts'],
+  // Integration tests (real DB) run via the separate integration config.
+  testPathIgnorePatterns: ['/node_modules/', '\\.integration\\.test\\.ts$'],
   clearMocks: true,
 };
