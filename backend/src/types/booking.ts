@@ -33,3 +33,11 @@ export interface NewBooking {
   confirmationCode: string;
   totalCents: number;
 }
+
+export interface NewSeatHold {
+  eventId: string;
+  guestId: string;
+  seats: number;
+  expiresAt: Date;
+  bookingId: string;
+}

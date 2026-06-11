@@ -14,6 +14,10 @@ const listQuerySchema = z.object({
   cuisine: z.string().min(1).optional(),
   maxPrice: z.coerce.number().nonnegative().optional(), // dollars
   tags: z.string().min(1).optional(), // comma-separated
+  // Search-bar params (where / when / seats):
+  where: z.string().trim().min(1).max(80).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD').optional(),
+  minSeats: z.coerce.number().int().min(1).max(24).optional(),
   sort: z.enum(['soonest', 'price', 'top-rated']).default('soonest'),
   limit: z.coerce.number().int().min(1).max(60).default(24),
   offset: z.coerce.number().int().min(0).default(0),
@@ -47,6 +51,9 @@ export async function registerEventRoutes(app: FastifyInstance): Promise<void> {
       cuisine: q.cuisine,
       maxPriceCents: q.maxPrice != null ? Math.round(q.maxPrice * 100) : undefined,
       tags: q.tags ? q.tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
+      where: q.where,
+      date: q.date,
+      minSeats: q.minSeats,
       sort: q.sort,
       limit: q.limit,
       offset: q.offset,

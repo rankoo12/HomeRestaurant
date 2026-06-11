@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { Avatar, Button, Icon } from '@/components/atoms';
 import { EventCard, EventFeature, FoodImage, SearchBar } from '@/components/molecules';
-import { Footer, Hero, Nav } from '@/components/organisms';
+import { Footer, Hero } from '@/components/organisms';
+import { SiteNav } from '@/app/site-nav';
 import { listEvents } from '@/lib/api';
 import { toEventCardModel } from '@/lib/mappers';
 
@@ -35,7 +36,7 @@ export default async function LandingPage() {
 
   return (
     <>
-      <Nav />
+      <SiteNav />
 
       <Hero
         kicker="A seat at someone's table"

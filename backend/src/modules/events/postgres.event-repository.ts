@@ -1,12 +1,14 @@
 import { getPool, withTransaction } from '../../db/index.js';
 import type { Queryable } from '../../db/index.js';
-import type { Event, EventCourse, EventWithDetails, NewEvent } from '../../types/index.js';
+import type { Event, EventCourse, EventStatus, EventWithDetails, NewEvent } from '../../types/index.js';
 import type {
   DiscoveryQuery,
   DiscoveryResult,
   EventListFilters,
   EventListItem,
   EventRepository,
+  EventUpdate,
+  HostEventListItem,
 } from './interfaces.js';
 
 interface DiscoveryRow {
@@ -125,6 +127,24 @@ export class PostgresEventRepository implements EventRepository {
     return this.assembleDetails(mapRow(row), db);
   }
 
+  async findById(id: string, db: Queryable = getPool()): Promise<Event | null> {
+    const { rows } = await db.query<EventRow>('SELECT * FROM events WHERE id = $1', [id]);
+    const row = rows[0];
+    return row ? mapRow(row) : null;
+  }
+
+  async findByIdForUpdate(id: string, db: Queryable): Promise<Event | null> {
+    const { rows } = await db.query<EventRow>('SELECT * FROM events WHERE id = $1 FOR UPDATE', [
+      id,
+    ]);
+    const row = rows[0];
+    return row ? mapRow(row) : null;
+  }
+
+  async incrementSeatsBooked(id: string, delta: number, db: Queryable): Promise<void> {
+    await db.query('UPDATE events SET seats_booked = seats_booked + $2 WHERE id = $1', [id, delta]);
+  }
+
   async list(filters: EventListFilters = {}, db: Queryable = getPool()): Promise<Event[]> {
     const { clauses, params } = buildEventFilters(filters, 'events');
     const sql = `SELECT * FROM events
@@ -139,6 +159,22 @@ export class PostgresEventRepository implements EventRepository {
     db: Queryable = getPool(),
   ): Promise<DiscoveryResult> {
     const { clauses, params } = buildEventFilters(query, 'e');
+    // Search-bar filters (discovery spec §query params) — discovery-only:
+    // `where` needs the chef join (cp.city), so it can't live in buildEventFilters.
+    if (query.where) {
+      params.push(`%${query.where}%`);
+      clauses.push(`(e.neighborhood ILIKE $${params.length} OR cp.city ILIKE $${params.length})`);
+    }
+    if (query.date) {
+      params.push(query.date);
+      clauses.push(
+        `e.starts_at >= $${params.length}::date AND e.starts_at < $${params.length}::date + interval '1 day'`,
+      );
+    }
+    if (typeof query.minSeats === 'number') {
+      params.push(query.minSeats);
+      clauses.push(`(e.seats_total - e.seats_booked) >= $${params.length}`);
+    }
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
 
     const orderBy =
@@ -180,6 +216,113 @@ export class PostgresEventRepository implements EventRepository {
     );
 
     return { items: rowsRes.rows.map(mapDiscoveryRow), total };
+  }
+
+  async findByIdWithDetails(id: string, db: Queryable = getPool()): Promise<EventWithDetails | null> {
+    const event = await this.findById(id, db);
+    if (!event) return null;
+    return this.assembleDetails(event, db);
+  }
+
+  async update(id: string, fields: EventUpdate, db?: Queryable): Promise<EventWithDetails> {
+    const run = async (client: Queryable): Promise<EventWithDetails> => {
+      const { rows } = await client.query<EventRow>(
+        `UPDATE events SET
+           title             = COALESCE($2, title),
+           cuisine           = COALESCE($3, cuisine),
+           short_description = COALESCE($4, short_description),
+           neighborhood      = COALESCE($5, neighborhood),
+           starts_at         = COALESCE($6, starts_at),
+           duration_minutes  = COALESCE($7::integer, duration_minutes),
+           price_cents       = COALESCE($8::integer, price_cents),
+           seats_total       = COALESCE($9::integer, seats_total),
+           image_seed        = COALESCE($10::integer, image_seed)
+         WHERE id = $1 RETURNING *`,
+        [
+          id,
+          fields.title ?? null,
+          fields.cuisine ?? null,
+          fields.shortDescription ?? null,
+          fields.neighborhood ?? null,
+          fields.startsAt ?? null,
+          fields.durationMinutes ?? null,
+          fields.priceCents ?? null,
+          fields.seatsTotal ?? null,
+          fields.imageSeed ?? null,
+        ],
+      );
+      const row = rows[0];
+      if (!row) throw new Error(`events UPDATE: no row for id ${id}`);
+
+      if (fields.courses) {
+        await client.query('DELETE FROM event_courses WHERE event_id = $1', [id]);
+        for (const course of fields.courses) {
+          await client.query(
+            `INSERT INTO event_courses (event_id, position, name, description)
+             VALUES ($1, $2, $3, $4)`,
+            [id, course.position, course.name, course.description],
+          );
+        }
+      }
+      if (fields.tags) {
+        await client.query('DELETE FROM event_tags WHERE event_id = $1', [id]);
+        for (const label of fields.tags) {
+          await client.query('INSERT INTO event_tags (event_id, label) VALUES ($1, $2)', [id, label]);
+        }
+      }
+      return this.assembleDetails(mapRow(row), client);
+    };
+    return db ? run(db) : withTransaction((client) => run(client));
+  }
+
+  async updateStatus(id: string, status: EventStatus, db: Queryable = getPool()): Promise<Event> {
+    const { rows } = await db.query<EventRow>(
+      'UPDATE events SET status = $2 WHERE id = $1 RETURNING *',
+      [id, status],
+    );
+    const row = rows[0];
+    if (!row) throw new Error(`events status UPDATE: no row for id ${id}`);
+    return mapRow(row);
+  }
+
+  async listByChef(chefId: string, db: Queryable = getPool()): Promise<HostEventListItem[]> {
+    const { rows } = await db.query<
+      EventRow & { live_held_seats: string; confirmed_bookings: string }
+    >(
+      `SELECT e.*,
+              COALESCE((SELECT SUM(sh.seats) FROM seat_holds sh
+                         WHERE sh.event_id = e.id AND sh.status = 'active'
+                           AND sh.expires_at > now()), 0)::text AS live_held_seats,
+              (SELECT COUNT(*) FROM bookings b
+                WHERE b.event_id = e.id AND b.status = 'confirmed')::text AS confirmed_bookings
+         FROM events e
+        WHERE e.chef_id = $1
+        ORDER BY e.starts_at DESC`,
+      [chefId],
+    );
+    return rows.map((row) => ({
+      ...mapRow(row),
+      liveHeldSeats: Number(row.live_held_seats),
+      confirmedBookings: Number(row.confirmed_bookings),
+    }));
+  }
+
+  async unpublishAllForChef(chefId: string, db: Queryable = getPool()): Promise<number> {
+    const { rowCount } = await db.query(
+      `UPDATE events SET status = 'unpublished'
+        WHERE chef_id = $1 AND status = 'published'`,
+      [chefId],
+    );
+    return rowCount ?? 0;
+  }
+
+  async completePastEvents(db: Queryable = getPool()): Promise<number> {
+    const { rowCount } = await db.query(
+      `UPDATE events SET status = 'completed'
+        WHERE status = 'published'
+          AND starts_at + (duration_minutes * interval '1 minute') < now()`,
+    );
+    return rowCount ?? 0;
   }
 
   /** Loads courses + tags for an event and returns the detail shape. */

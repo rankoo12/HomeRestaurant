@@ -18,6 +18,7 @@
 | `Input` | label/error wrapper + native input/textarea props | `styles.css` .field/.input |
 | `Chip` | `active?: boolean`, button props | `styles.css` .chip |
 | `Badge` | `tone: 'verified'\|'soon'\|'gold'`, children | `styles.css` .badge* |
+| `Skeleton` | `className?` (sized by utilities; `aria-hidden` pulse block) | — *(added Phase 8 for loading states — error-and-empty-states spec)* |
 
 `IconName` enumerates the prototype's icon keys (search, star, pin, clock, users, check, shield, heart,
 cal, arrow, chev*, plus, minus, sparkle, bell, lock, card, leaf, flame, plate, wheat, fish, pepper, edit,
@@ -35,7 +36,7 @@ trash, chart, cam, globe, message, back).
 | `EventFeature` | `event: EventCardModel`, `onOpen?`, `reverse?` | `screens-browse.jsx` EventFeature |
 | `ReviewCard` | `review: ReviewModel` | `screens-event.jsx` reviews |
 | `KPI` | `label`, `value`, `sub?`, `icon`, `accent?` | `screens-host.jsx` KPI |
-| `SearchBar` | `floating?: boolean` (presentational fields for now) | `screens-browse.jsx` SearchBar |
+| `SearchBar` | `floating?`, `initialWhere?`, `initialDate?`, `initialSeats?`, `extraParams?` — interactive client component; submits to `/events?where&date&seats` *(wired post-Phase 8)* | `screens-browse.jsx` SearchBar |
 
 > `EventCardModel` / `ReviewModel` are lightweight view-model props (title, chef name, price, seats, etc.)
 > defined in `components` types — NOT the backend entities. Feature phases map API data → these models.

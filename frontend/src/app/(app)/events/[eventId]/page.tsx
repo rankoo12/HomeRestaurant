@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Avatar, Badge, Chip, Icon, VerifiedPill } from '@/components/atoms';
-import { FoodImage, MetaStat, ReviewCard } from '@/components/molecules';
-import { Footer, Nav } from '@/components/organisms';
+import { FoodImage, MetaStat } from '@/components/molecules';
+import { Footer, ReviewList } from '@/components/organisms';
+import { SiteNav } from '@/app/site-nav';
 import { getEvent, ApiError } from '@/lib/api';
 import { dollars, formatDateLabel, formatTimeLabel, toReviewModel } from '@/lib/mappers';
 import { BookingWidget } from './booking-widget';
@@ -37,7 +38,7 @@ export default async function EventDetailPage({
 
   return (
     <>
-      <Nav links={[{ href: '/events', label: 'Browse' }]} />
+      <SiteNav links={[{ href: '/events', label: 'Browse' }]} />
 
       <div className="mx-auto max-w-[1240px] px-8 pt-6">
         <Link href="/events" className="mb-[18px] flex items-center gap-[7px] text-[13px] text-text-3">
@@ -155,11 +156,7 @@ export default async function EventDetailPage({
                 </h2>
               </div>
               {event.reviews.length > 0 ? (
-                <div className="grid gap-[18px] md:grid-cols-2">
-                  {event.reviews.map((r) => (
-                    <ReviewCard key={r.id} review={toReviewModel(r)} />
-                  ))}
-                </div>
+                <ReviewList reviews={event.reviews.map(toReviewModel)} columns={2} />
               ) : (
                 <p className="text-sm text-text-3">No reviews yet for this dinner.</p>
               )}
@@ -169,6 +166,7 @@ export default async function EventDetailPage({
           {/* sticky booking */}
           <div className="sticky top-24">
             <BookingWidget
+              eventId={event.id}
               price={dollars(event.priceCents)}
               rating={chef.stats.rating}
               seatsLeft={event.seatsLeft}

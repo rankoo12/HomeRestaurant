@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Avatar, Badge, Icon, VerifiedPill } from '@/components/atoms';
-import { EventCard, FoodImage, ReviewCard } from '@/components/molecules';
-import { Footer, Nav } from '@/components/organisms';
+import { EventCard, FoodImage } from '@/components/molecules';
+import { Footer, ReviewList } from '@/components/organisms';
+import { SiteNav } from '@/app/site-nav';
 import { getChef, ApiError } from '@/lib/api';
 import { toEventCardModel, toReviewModel } from '@/lib/mappers';
 
@@ -32,7 +33,7 @@ export default async function ChefProfilePage({
 
   return (
     <>
-      <Nav links={[{ href: '/events', label: 'Browse' }]} />
+      <SiteNav links={[{ href: '/events', label: 'Browse' }]} />
 
       {/* cover */}
       <div className="relative h-[300px]">
@@ -119,11 +120,7 @@ export default async function ChefProfilePage({
                 {chef.stats.rating} · {chef.stats.reviewCount} reviews
               </h2>
               {chef.reviews.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {chef.reviews.map((r) => (
-                    <ReviewCard key={r.id} review={toReviewModel(r)} />
-                  ))}
-                </div>
+                <ReviewList reviews={chef.reviews.map(toReviewModel)} columns={1} />
               ) : (
                 <p className="text-sm text-text-3">No reviews yet.</p>
               )}

@@ -7,3 +7,4 @@ export { CategoryRow } from './category-row';
 export { FilterRail } from './filter-rail';
 export type { FilterGroup } from './filter-rail';
 export { BookingCard } from './booking-card';
+export { ReviewList } from './review-list';

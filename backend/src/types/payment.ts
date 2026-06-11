@@ -27,6 +27,13 @@ export interface Payout {
   updatedAt: Date;
 }
 
+export interface NewPayment {
+  bookingId: string;
+  amountCents: number;
+  currency?: string;
+  stripePaymentIntentId?: string | null;
+}
+
 export interface NewPayout {
   chefId: string;
   bookingId?: string | null;

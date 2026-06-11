@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { loadEnv } from '../src/config/env.js';
+import { hashPassword } from '../src/modules/identity/password.js';
 import { PostgresUserRepository } from '../src/modules/identity/postgres.user-repository.js';
 import { PostgresChefRepository } from '../src/modules/chef-onboarding/postgres.chef-repository.js';
 import { PostgresEventRepository } from '../src/modules/events/postgres.event-repository.js';
@@ -14,9 +15,13 @@ import {
 
 /**
  * Idempotent dev seed: wipes domain tables, then reproduces the design prototype
- * (docs/design/app/data.jsx) — 4 chefs, 6 events, 4 guests, 4 reviews, demo payouts.
+ * (docs/design/app/data.jsx) — 4 chefs, 6 events, 4 guests, 4 reviews, demo payouts,
+ * plus one admin (seed/DB is the ONLY way an admin exists — admin spec §6).
+ * Every seeded user gets the demo password below so flows are demoable.
  * Runs inside one transaction. Not for production data.
  */
+const DEMO_PASSWORD = 'Demo1234'; // documented in backend/README.md — dev seed only
+
 async function main(): Promise<void> {
   const env = loadEnv();
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL is required to seed.');
@@ -27,6 +32,9 @@ async function main(): Promise<void> {
   const events = new PostgresEventRepository();
   const reviews = new PostgresReviewRepository();
   const payouts = new PostgresPayoutRepository();
+
+  // One hash, reused — argon2 per-user would slow the seed for no gain.
+  const passwordHash = await hashPassword(DEMO_PASSWORD);
 
   const client = await pool.connect();
   try {
@@ -45,7 +53,7 @@ async function main(): Promise<void> {
     // Chefs: user + profile (approved so they're publishable) + badges.
     for (const c of SEED_CHEFS) {
       const user = await users.create(
-        { email: c.email, fullName: c.fullName, role: 'host', avatarSeed: c.avatarSeed },
+        { email: c.email, fullName: c.fullName, role: 'host', avatarSeed: c.avatarSeed, passwordHash },
         client,
       );
       await chefs.create(
@@ -99,11 +107,23 @@ async function main(): Promise<void> {
     const guestIdByEmail = new Map<string, string>();
     for (const g of SEED_GUESTS) {
       const user = await users.create(
-        { email: g.email, fullName: g.fullName, role: 'guest', avatarSeed: g.avatarSeed },
+        { email: g.email, fullName: g.fullName, role: 'guest', avatarSeed: g.avatarSeed, passwordHash },
         client,
       );
       guestIdByEmail.set(g.email, user.id);
     }
+
+    // The platform admin — seed/DB only, never via API (admin spec §6/§11).
+    await users.create(
+      {
+        email: 'admin@homerestaurant.test',
+        fullName: 'Platform Admin',
+        role: 'admin',
+        avatarSeed: 7,
+        passwordHash,
+      },
+      client,
+    );
 
     // Reviews.
     for (const r of SEED_REVIEWS) {
@@ -142,8 +162,9 @@ async function main(): Promise<void> {
     await client.query('COMMIT');
     console.log(
       `Seeded: ${SEED_CHEFS.length} chefs, ${SEED_EVENTS.length} events, ` +
-        `${SEED_GUESTS.length} guests, ${SEED_REVIEWS.length} reviews.`,
+        `${SEED_GUESTS.length} guests, ${SEED_REVIEWS.length} reviews, 1 admin.`,
     );
+    console.log(`Demo login: any seeded email (e.g. admin@homerestaurant.test) / ${DEMO_PASSWORD}`);
   } catch (err) {
     await client.query('ROLLBACK').catch(() => undefined);
     throw err;

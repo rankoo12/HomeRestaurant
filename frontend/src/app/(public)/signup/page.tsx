@@ -29,7 +29,12 @@ export default function SignupPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error?.message ?? 'Sign-up failed');
+        // 429 = rate limited (Phase 8 hardening) — say so in plain words.
+        setError(
+          res.status === 429
+            ? 'Too many attempts — wait a minute and try again.'
+            : (data?.error?.message ?? 'Sign-up failed'),
+        );
         return;
       }
       router.push('/guest/dashboard');

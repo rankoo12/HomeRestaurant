@@ -19,6 +19,12 @@
 | [identity/](./identity/00-index.md) | ✅ Authored | **Spec tree** — auth & RBAC: flows, token/session model, RBAC route matrix, password policy. *(Phase 3)* |
 | [design-system/](./design-system/00-index.md) | ✅ Authored | **Spec tree** — tokens, atomic boundaries, component inventory w/ props, a11y. *(Phase 4)* |
 | [discovery/](./discovery/00-index.md) | ✅ Authored | **Spec tree** — events read API, chef-profile read API, discovery pages, states. *(Phase 5)* |
+| [booking-and-concurrency.md](./booking-and-concurrency.md) | ✅ Authored — ready for review | Booking lifecycle, seat-hold model + TTL, transactional allocation (`FOR UPDATE`), overbooking contract, booking API, test plan. **(Critical path.)** *(Phase 6)* |
+| [payments.md](./payments.md) | ✅ Authored — ready for review | Stripe Checkout Session flow, webhook handling + idempotency, payment state machine, failure UX, refund scope, env/CI strategy. *(Phase 6, guest side; §11 host-payout ledger added for Phase 7)* |
+| [chef-onboarding-and-verification.md](./chef-onboarding-and-verification.md) | ✅ Authored — ready for review | Onboarding wizard, KYC submission model, role upgrade, verification states (host side; admin actions Phase 8). *(Phase 7)* |
+| [events.md](./events.md) | ✅ Authored — ready for review | Event write side: builder, status machine, mutability rules vs bookings, cancel-with-refunds, roster, dashboard. *(Phase 7)* |
+| [reviews-and-moderation.md](./reviews-and-moderation.md) | ✅ Authored — ready for review | Review submission eligibility, aggregation, flag primitive; §11 moderation actions added for Phase 8. *(Phases 7–8)* |
+| [admin.md](./admin.md) | ✅ Implemented (Phase 8) | Admin portal: dashboard metrics, user management (suspend/role change), payout admin, rate limiting + hardening checklist. *(Phase 8)* |
 
 ## Phase specs
 
@@ -31,22 +37,15 @@ Each phase has a stub here; its detailed required specs (below) are authored whe
 | 3 | [phases/03-identity.md](./phases/03-identity.md) | ✅ Complete |
 | 4 | [phases/04-design-system.md](./phases/04-design-system.md) | ✅ Complete |
 | 5 | [phases/05-discovery.md](./phases/05-discovery.md) | ✅ Complete |
-| 6 | [phases/06-booking.md](./phases/06-booking.md) | 📝 Stub |
-| 7 | [phases/07-host.md](./phases/07-host.md) | 📝 Stub |
-| 8 | [phases/08-admin.md](./phases/08-admin.md) | 📝 Stub |
-| 8 | [phases/error-and-empty-states.md](./phases/error-and-empty-states.md) | 📝 Stub |
+| 6 | [phases/06-booking.md](./phases/06-booking.md) | ✅ Complete *(deferrals in [known-issues](../known-issues/phase-6-deferrals.md))* |
+| 7 | [phases/07-host.md](./phases/07-host.md) | ✅ Complete *(KYC metadata-only, payouts ledger-only, messaging → Phase 8)* |
+| 8 | [phases/08-admin.md](./phases/08-admin.md) | ✅ Complete *(approved scope: no admin password reset, `admin` grants seed/DB-only, no audit table, suspend never auto-refunds)* |
+| 8 | [phases/error-and-empty-states.md](./phases/error-and-empty-states.md) | ✅ Complete — every remaining edge state shipped in Phase 8 |
 
 ## Planned specs (not yet written)
 
-These are placeholders for the SDD specs we'll author as each area is built. No implementation
-should begin on one of these until its spec exists.
-
-| Planned spec | Domain |
-|---|---|
-| `identity-and-rbac.md` | Auth (JWT/OAuth2), sessions, roles (guest/host/admin), route guards. |
-| `chef-onboarding-and-verification.md` | Host onboarding wizard, KYC submission, admin verification queue state machine. |
-| `events.md` | Event lifecycle: create/edit/publish/unpublish/cancel, capacity, scheduling. |
-| `booking-and-concurrency.md` | Seat allocation, transactional booking flow, overbooking prevention. **(Critical path.)** |
-| `payments.md` | Stripe checkout, refunds, host payouts (Connect), payment-failure handling. |
-| `reviews-and-moderation.md` | Review submission, aggregation onto chef profiles, admin moderation. |
-| `design-system.md` | Design tokens, theme toggle, Atomic Design component inventory. |
+**None — every planned spec is now authored.** Two early placeholders were superseded rather than
+written as standalone files: `identity-and-rbac.md` became the [identity/](./identity/00-index.md)
+spec tree (Phase 3) with the admin powers (suspend, role change) specced in
+[admin.md](./admin.md) §4/§6 (Phase 8); `design-system.md` became the
+[design-system/](./design-system/00-index.md) spec tree (Phase 4).

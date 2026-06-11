@@ -1,7 +1,7 @@
 import { getPool } from '../../db/index.js';
 import type { Queryable } from '../../db/index.js';
 import type { NewPayout, Payout } from '../../types/index.js';
-import type { PayoutRepository } from './interfaces.js';
+import type { AdminPayoutRow, EarningsRow, PayoutListFilters, PayoutRepository } from './interfaces.js';
 
 interface PayoutRow {
   id: string;
@@ -58,5 +58,94 @@ export class PostgresPayoutRepository implements PayoutRepository {
       [chefId],
     );
     return rows.map(mapRow);
+  }
+
+  async listForEarnings(chefId: string, db: Queryable = getPool()): Promise<EarningsRow[]> {
+    const { rows } = await db.query<
+      PayoutRow & {
+        event_title: string | null;
+        event_starts_at: Date | null;
+        confirmation_code: string | null;
+      }
+    >(
+      `SELECT p.*, e.title AS event_title, e.starts_at AS event_starts_at,
+              b.confirmation_code
+         FROM payouts p
+         LEFT JOIN bookings b ON b.id = p.booking_id
+         LEFT JOIN events e ON e.id = b.event_id
+        WHERE p.chef_id = $1
+        ORDER BY p.created_at DESC`,
+      [chefId],
+    );
+    return rows.map((row) => ({
+      ...mapRow(row),
+      eventTitle: row.event_title,
+      eventStartsAt: row.event_starts_at,
+      confirmationCode: row.confirmation_code,
+    }));
+  }
+
+  async markFailedByBooking(bookingId: string, db: Queryable = getPool()): Promise<void> {
+    await db.query(
+      `UPDATE payouts SET status = 'failed' WHERE booking_id = $1 AND status = 'pending'`,
+      [bookingId],
+    );
+  }
+
+  async findById(id: string, db: Queryable = getPool()): Promise<Payout | null> {
+    const { rows } = await db.query<PayoutRow>('SELECT * FROM payouts WHERE id = $1', [id]);
+    return rows[0] ? mapRow(rows[0]) : null;
+  }
+
+  async listAll(
+    filters: PayoutListFilters = {},
+    db: Queryable = getPool(),
+  ): Promise<AdminPayoutRow[]> {
+    const params: unknown[] = [];
+    let whereSql = '';
+    if (filters.status) {
+      params.push(filters.status);
+      whereSql = `WHERE p.status = $${params.length}::payout_status`;
+    }
+    const limit = filters.limit ?? 50;
+    const offset = filters.offset ?? 0;
+    const { rows } = await db.query<
+      PayoutRow & {
+        chef_name: string;
+        event_title: string | null;
+        event_starts_at: Date | null;
+        confirmation_code: string | null;
+      }
+    >(
+      `SELECT p.*, u.full_name AS chef_name,
+              e.title AS event_title, e.starts_at AS event_starts_at,
+              b.confirmation_code
+         FROM payouts p
+         JOIN users u ON u.id = p.chef_id
+         LEFT JOIN bookings b ON b.id = p.booking_id
+         LEFT JOIN events e ON e.id = b.event_id
+        ${whereSql}
+        ORDER BY p.created_at ASC
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, limit, offset],
+    );
+    return rows.map((row) => ({
+      ...mapRow(row),
+      chefName: row.chef_name,
+      eventTitle: row.event_title,
+      eventStartsAt: row.event_starts_at,
+      confirmationCode: row.confirmation_code,
+    }));
+  }
+
+  async markPaid(id: string, db: Queryable = getPool()): Promise<Payout | null> {
+    // Status-guarded UPDATE: only a pending payout transitions (admin spec §4).
+    const { rows } = await db.query<PayoutRow>(
+      `UPDATE payouts SET status = 'paid', paid_at = now()
+        WHERE id = $1 AND status = 'pending'
+        RETURNING *`,
+      [id],
+    );
+    return rows[0] ? mapRow(rows[0]) : null;
   }
 }

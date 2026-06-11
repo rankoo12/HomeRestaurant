@@ -12,10 +12,12 @@ export interface NavProps {
   links?: NavLink[];
   /** When provided, shows the avatar; otherwise shows Log in / Sign up. */
   user?: { name: string; avatarSeed: number } | null;
+  /** Where the avatar links — the user's portal home (role-dependent). */
+  accountHref?: string;
 }
 
 /** Sticky top navigation. Presentational — links + auth state passed in. */
-export function Nav({ links = [], user = null }: NavProps) {
+export function Nav({ links = [], user = null, accountHref = '/guest/dashboard' }: NavProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-[var(--nav-bg)] backdrop-blur-[14px]">
       <div className="mx-auto flex h-[72px] max-w-[1240px] items-center gap-[22px] px-8">
@@ -44,7 +46,7 @@ export function Nav({ links = [], user = null }: NavProps) {
         <div className="flex items-center gap-3">
           <ThemeToggle />
           {user ? (
-            <Link href="/guest/dashboard" aria-label="Your account">
+            <Link href={accountHref} aria-label="Your account">
               <Avatar seed={user.avatarSeed} name={user.name} size={42} ring />
             </Link>
           ) : (

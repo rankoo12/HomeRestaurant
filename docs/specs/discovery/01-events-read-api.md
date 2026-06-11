@@ -12,6 +12,9 @@ List published events with optional filters + sort.
 | `cuisine` | string | exact cuisine match |
 | `maxPrice` | number (dollars) | price ceiling; converted to cents server-side |
 | `tags` | string (comma-separated) | event must carry ALL listed tags |
+| `where` | string (1–80) | search-bar "Where": case-insensitive substring match on event neighborhood **or** chef city *(added post-Phase 8 — search-bar wiring)* |
+| `date` | string `YYYY-MM-DD` | search-bar "When": only events starting on that UTC date *(added post-Phase 8)* |
+| `minSeats` | number (1–24) | search-bar "Seats": only events with `seatsLeft ≥ minSeats` *(added post-Phase 8)* |
 | `sort` | `soonest` \| `price` \| `top-rated` | default `soonest` |
 | `limit` | number (1–60, default 24) | page size |
 | `offset` | number (≥0, default 0) | page offset |

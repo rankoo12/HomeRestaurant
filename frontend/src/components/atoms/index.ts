@@ -13,6 +13,8 @@ export { Input } from './input';
 export type { InputProps } from './input';
 export { Chip } from './chip';
 export { Badge } from './badge';
+export { Skeleton } from './skeleton';
+export type { SkeletonProps } from './skeleton';
 export { ThemeToggle } from './theme-toggle';
 export { ThemeScript } from './theme-script';
 export { FOOD_GRADS, FOOD_GLYPHS, gradAt } from './food-grads';

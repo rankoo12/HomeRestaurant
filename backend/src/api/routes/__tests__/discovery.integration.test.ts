@@ -141,6 +141,40 @@ maybe('discovery read API (integration)', () => {
     expect(res.json().events.map((e: { slug: string }) => e.slug)).toEqual(['jollof-sunday', 'kaiseki']);
   });
 
+  it('search-bar filters: where matches neighborhood or chef city, case-insensitively', async () => {
+    const byNeighborhood = await app.inject({ method: 'GET', url: '/api/events?where=bed-stuy' });
+    expect(byNeighborhood.json().events.map((e: { slug: string }) => e.slug)).toEqual([
+      'jollof-sunday',
+    ]);
+
+    const byEventArea = await app.inject({ method: 'GET', url: '/api/events?where=sf' });
+    expect(byEventArea.json().events.map((e: { slug: string }) => e.slug)).toEqual(['kaiseki']);
+
+    // Chef city match: both published events belong to the Brooklyn-based chef.
+    const byChefCity = await app.inject({ method: 'GET', url: '/api/events?where=brooklyn' });
+    expect(byChefCity.json().total).toBe(2);
+  });
+
+  it('search-bar filters: date keeps only events starting that day', async () => {
+    const day1 = await app.inject({ method: 'GET', url: '/api/events?date=2026-06-07' });
+    expect(day1.json().events.map((e: { slug: string }) => e.slug)).toEqual(['jollof-sunday']);
+
+    const day2 = await app.inject({ method: 'GET', url: '/api/events?date=2026-06-20' });
+    expect(day2.json().events.map((e: { slug: string }) => e.slug)).toEqual(['kaiseki']);
+
+    const malformed = await app.inject({ method: 'GET', url: '/api/events?date=tomorrow' });
+    expect(malformed.statusCode).toBe(400);
+  });
+
+  it('search-bar filters: minSeats compares against seats left', async () => {
+    // jollof has 3 seats left (10 - 7); kaiseki has all 8.
+    const four = await app.inject({ method: 'GET', url: '/api/events?minSeats=4' });
+    expect(four.json().events.map((e: { slug: string }) => e.slug)).toEqual(['kaiseki']);
+
+    const two = await app.inject({ method: 'GET', url: '/api/events?minSeats=2' });
+    expect(two.json().total).toBe(2);
+  });
+
   it('returns full event detail with courses, tags, chef block, reviews', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/events/jollof-sunday' });
     expect(res.statusCode).toBe(200);

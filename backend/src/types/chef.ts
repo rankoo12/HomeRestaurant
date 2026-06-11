@@ -47,3 +47,31 @@ export interface ChefBadge {
   chefId: string;
   label: string;
 }
+
+/** One submitted KYC item (audit trail). Mirrors `chef_verifications`. */
+export interface ChefVerification {
+  id: string;
+  chefId: string;
+  kind: string;
+  status: VerificationStatus;
+  documentRef: string | null;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
+  notes: string | null;
+  createdAt: Date;
+}
+
+export interface NewChefVerification {
+  chefId: string;
+  kind: string;
+  documentRef?: string | null;
+}
+
+/** Host-editable profile fields (onboarding wizard / resubmission). */
+export interface ChefProfileUpdate {
+  cuisine?: string;
+  city?: string;
+  tagline?: string;
+  bio?: string;
+  coverSeed?: number;
+}

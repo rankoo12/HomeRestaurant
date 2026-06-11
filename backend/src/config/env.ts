@@ -27,6 +27,21 @@ const envSchema = z
     JWT_SECRET: z.string().min(16).optional(),
     ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(900), // 15 min
     REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(604800), // 7 days
+    // Payments (Phase 6) — see docs/specs/payments.md §9. Optional in tests
+    // (the suite injects a FakePaymentGateway); required for real checkout.
+    STRIPE_SECRET_KEY: z.string().min(1).optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+    // Single source of truth for the service fee — UI and charge can't disagree.
+    SERVICE_FEE_RATE: z.coerce.number().min(0).max(1).default(0.1),
+    // Base for Stripe success/cancel URLs; falls back to CORS_ORIGIN.
+    CHECKOUT_RESULT_BASE_URL: z.string().url().optional(),
+    // Rate limiting (Phase 8 hardening — docs/specs/admin.md §9). Defaults are
+    // the spec values; unset RATE_LIMIT_ENABLED means "on outside tests".
+    RATE_LIMIT_ENABLED: z.enum(['true', 'false']).optional(),
+    RATE_LIMIT_GLOBAL_MAX: z.coerce.number().int().positive().default(300),
+    RATE_LIMIT_AUTH_MAX: z.coerce.number().int().positive().default(10),
+    RATE_LIMIT_REFRESH_MAX: z.coerce.number().int().positive().default(30),
+    RATE_LIMIT_ABUSE_MAX: z.coerce.number().int().positive().default(30),
   })
   .superRefine((env, ctx) => {
     const requiredOutsideTest: Array<keyof typeof env> = [

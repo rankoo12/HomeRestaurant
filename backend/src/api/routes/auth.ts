@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { AppError } from '../../types/index.js';
+import { loadEnv } from '../../config/env.js';
 import { PostgresUserRepository } from '../../modules/identity/postgres.user-repository.js';
 import {
   AuthService,
@@ -15,20 +16,25 @@ import {
  */
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   const service = new AuthService(new PostgresUserRepository());
+  const env = loadEnv();
+  // Brute-force / enumeration limits (admin spec §9). The config is inert when
+  // the rate-limit plugin isn't registered (NODE_ENV=test).
+  const authLimit = { rateLimit: { max: env.RATE_LIMIT_AUTH_MAX, timeWindow: 60_000 } };
+  const refreshLimit = { rateLimit: { max: env.RATE_LIMIT_REFRESH_MAX, timeWindow: 60_000 } };
 
-  app.post('/api/auth/register', async (req, reply) => {
+  app.post('/api/auth/register', { config: authLimit }, async (req, reply) => {
     const input = registerSchema.parse(req.body);
     const result = await service.register(input);
     reply.status(201).send(result);
   });
 
-  app.post('/api/auth/login', async (req, reply) => {
+  app.post('/api/auth/login', { config: authLimit }, async (req, reply) => {
     const input = loginSchema.parse(req.body);
     const result = await service.login(input);
     reply.send(result);
   });
 
-  app.post('/api/auth/refresh', async (req, reply) => {
+  app.post('/api/auth/refresh', { config: refreshLimit }, async (req, reply) => {
     const token = readRefreshToken(req.body, req.headers['x-refresh-token']);
     if (!token) throw new AppError('INVALID_REFRESH', 'No refresh token provided');
     const result = await service.refresh(token);

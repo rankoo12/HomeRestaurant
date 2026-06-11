@@ -1,7 +1,7 @@
 import { getPool } from '../../db/index.js';
 import type { Queryable } from '../../db/index.js';
-import type { NewUser, User } from '../../types/index.js';
-import type { UserRepository } from './interfaces.js';
+import type { NewUser, User, UserRole } from '../../types/index.js';
+import type { UserListFilters, UserListResult, UserRepository } from './interfaces.js';
 
 interface UserRow {
   id: string;
@@ -72,5 +72,61 @@ export class PostgresUserRepository implements UserRepository {
     const row = rows[0];
     if (!row) return null;
     return { user: mapRow(row), passwordHash: row.password_hash };
+  }
+
+  async updateRole(userId: string, role: UserRole, db: Queryable = getPool()): Promise<User> {
+    const { rows } = await db.query<UserRow>(
+      'UPDATE users SET role = $2 WHERE id = $1 RETURNING *',
+      [userId, role],
+    );
+    const row = rows[0];
+    if (!row) throw new Error(`users UPDATE role: no row for id ${userId}`);
+    return mapRow(row);
+  }
+
+  async list(filters: UserListFilters = {}, db: Queryable = getPool()): Promise<UserListResult> {
+    const where: string[] = [];
+    const params: unknown[] = [];
+    if (filters.q) {
+      params.push(`%${filters.q}%`);
+      where.push(`(full_name ILIKE $${params.length} OR email::text ILIKE $${params.length})`);
+    }
+    if (filters.role) {
+      params.push(filters.role);
+      where.push(`role = $${params.length}::user_role`);
+    }
+    if (filters.suspended !== undefined) {
+      params.push(filters.suspended);
+      where.push(`is_suspended = $${params.length}`);
+    }
+    const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+
+    const limit = filters.limit ?? 50;
+    const offset = filters.offset ?? 0;
+    const count = await db.query<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM users ${whereSql}`,
+      params,
+    );
+    const { rows } = await db.query<UserRow>(
+      `SELECT * FROM users ${whereSql}
+        ORDER BY created_at DESC
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, limit, offset],
+    );
+    return { items: rows.map(mapRow), total: Number(count.rows[0]?.total ?? 0) };
+  }
+
+  async setSuspended(
+    userId: string,
+    suspended: boolean,
+    db: Queryable = getPool(),
+  ): Promise<User> {
+    const { rows } = await db.query<UserRow>(
+      'UPDATE users SET is_suspended = $2 WHERE id = $1 RETURNING *',
+      [userId, suspended],
+    );
+    const row = rows[0];
+    if (!row) throw new Error(`users UPDATE is_suspended: no row for id ${userId}`);
+    return mapRow(row);
   }
 }

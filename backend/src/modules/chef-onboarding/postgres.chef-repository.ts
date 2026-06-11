@@ -3,10 +3,40 @@ import type { Queryable } from '../../db/index.js';
 import type {
   ChefBadge,
   ChefProfile,
+  ChefProfileUpdate,
   ChefProfileWithStats,
+  ChefVerification,
   NewChefProfile,
+  NewChefVerification,
+  VerificationStatus,
 } from '../../types/index.js';
-import type { ChefRepository, PublicChefProfile } from './interfaces.js';
+import type { ChefRepository, PendingVerificationItem, PublicChefProfile } from './interfaces.js';
+
+interface VerificationRow {
+  id: string;
+  chef_id: string;
+  kind: string;
+  status: VerificationStatus;
+  document_ref: string | null;
+  reviewed_by: string | null;
+  reviewed_at: Date | null;
+  notes: string | null;
+  created_at: Date;
+}
+
+function mapVerificationRow(row: VerificationRow): ChefVerification {
+  return {
+    id: row.id,
+    chefId: row.chef_id,
+    kind: row.kind,
+    status: row.status,
+    documentRef: row.document_ref,
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at,
+    notes: row.notes,
+    createdAt: row.created_at,
+  };
+}
 
 interface ChefRow {
   user_id: string;
@@ -99,13 +129,23 @@ export class PostgresChefRepository implements ChefRepository {
   }
 
   async addBadge(chefId: string, label: string, db: Queryable = getPool()): Promise<ChefBadge> {
+    // Idempotent on the UNIQUE (chef_id, label) guard — admin approval re-runs
+    // must not explode (chef-onboarding spec §11).
     const { rows } = await db.query<{ id: string; chef_id: string; label: string }>(
-      `INSERT INTO chef_badges (chef_id, label) VALUES ($1, $2) RETURNING *`,
+      `INSERT INTO chef_badges (chef_id, label) VALUES ($1, $2)
+       ON CONFLICT (chef_id, label) DO NOTHING
+       RETURNING *`,
       [chefId, label],
     );
     const row = rows[0];
-    if (!row) throw new Error('chef_badges INSERT returned no row');
-    return { id: row.id, chefId: row.chef_id, label: row.label };
+    if (row) return { id: row.id, chefId: row.chef_id, label: row.label };
+    const existing = await db.query<{ id: string; chef_id: string; label: string }>(
+      'SELECT * FROM chef_badges WHERE chef_id = $1 AND label = $2',
+      [chefId, label],
+    );
+    const found = existing.rows[0];
+    if (!found) throw new Error('chef_badges INSERT returned no row');
+    return { id: found.id, chefId: found.chef_id, label: found.label };
   }
 
   async listBadges(chefId: string, db: Queryable = getPool()): Promise<ChefBadge[]> {
@@ -114,6 +154,146 @@ export class PostgresChefRepository implements ChefRepository {
       [chefId],
     );
     return rows.map((r) => ({ id: r.id, chefId: r.chef_id, label: r.label }));
+  }
+
+  async updateProfile(
+    userId: string,
+    fields: ChefProfileUpdate,
+    db: Queryable = getPool(),
+  ): Promise<ChefProfile> {
+    const { rows } = await db.query<ChefRow>(
+      `UPDATE chef_profiles SET
+         cuisine    = COALESCE($2, cuisine),
+         city       = COALESCE($3, city),
+         tagline    = COALESCE($4, tagline),
+         bio        = COALESCE($5, bio),
+         cover_seed = COALESCE($6::integer, cover_seed)
+       WHERE user_id = $1 RETURNING *`,
+      [
+        userId,
+        fields.cuisine ?? null,
+        fields.city ?? null,
+        fields.tagline ?? null,
+        fields.bio ?? null,
+        fields.coverSeed ?? null,
+      ],
+    );
+    const row = rows[0];
+    if (!row) throw new Error(`chef_profiles UPDATE: no row for user ${userId}`);
+    return mapRow(row);
+  }
+
+  async addVerification(
+    input: NewChefVerification,
+    db: Queryable = getPool(),
+  ): Promise<ChefVerification> {
+    const { rows } = await db.query<VerificationRow>(
+      `INSERT INTO chef_verifications (chef_id, kind, document_ref)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [input.chefId, input.kind, input.documentRef ?? null],
+    );
+    const row = rows[0];
+    if (!row) throw new Error('chef_verifications INSERT returned no row');
+    return mapVerificationRow(row);
+  }
+
+  async listVerifications(chefId: string, db: Queryable = getPool()): Promise<ChefVerification[]> {
+    const { rows } = await db.query<VerificationRow>(
+      'SELECT * FROM chef_verifications WHERE chef_id = $1 ORDER BY created_at DESC',
+      [chefId],
+    );
+    return rows.map(mapVerificationRow);
+  }
+
+  async setVerificationStatus(
+    userId: string,
+    status: VerificationStatus,
+    db: Queryable = getPool(),
+  ): Promise<ChefProfile> {
+    const { rows } = await db.query<ChefRow>(
+      'UPDATE chef_profiles SET verification_status = $2 WHERE user_id = $1 RETURNING *',
+      [userId, status],
+    );
+    const row = rows[0];
+    if (!row) throw new Error(`chef_profiles status UPDATE: no row for user ${userId}`);
+    return mapRow(row);
+  }
+
+  async listPendingVerifications(db: Queryable = getPool()): Promise<PendingVerificationItem[]> {
+    const { rows } = await db.query<{
+      chef_id: string;
+      slug: string;
+      name: string;
+      email: string;
+      avatar_seed: number;
+      cuisine: string;
+      city: string;
+      tagline: string;
+      bio: string;
+      applied_at: Date;
+    }>(
+      `SELECT cp.user_id AS chef_id, cp.slug, u.full_name AS name, u.email::text AS email,
+              u.avatar_seed, cp.cuisine, cp.city, cp.tagline, cp.bio,
+              COALESCE(
+                (SELECT MIN(v.created_at) FROM chef_verifications v
+                  WHERE v.chef_id = cp.user_id AND v.status = 'pending'),
+                cp.created_at
+              ) AS applied_at
+         FROM chef_profiles cp
+         JOIN users u ON u.id = cp.user_id
+        WHERE cp.verification_status = 'pending'
+        ORDER BY applied_at ASC`,
+    );
+    if (rows.length === 0) return [];
+
+    const chefIds = rows.map((r) => r.chef_id);
+    const verifications = await db.query<VerificationRow>(
+      `SELECT * FROM chef_verifications WHERE chef_id = ANY($1::uuid[])
+        ORDER BY created_at DESC`,
+      [chefIds],
+    );
+    const byChef = new Map<string, ChefVerification[]>();
+    for (const v of verifications.rows) {
+      const list = byChef.get(v.chef_id) ?? [];
+      list.push(mapVerificationRow(v));
+      byChef.set(v.chef_id, list);
+    }
+
+    return rows.map((r) => ({
+      chefId: r.chef_id,
+      slug: r.slug,
+      name: r.name,
+      email: r.email,
+      avatarSeed: r.avatar_seed,
+      cuisine: r.cuisine,
+      city: r.city,
+      tagline: r.tagline,
+      bio: r.bio,
+      appliedAt: r.applied_at,
+      verifications: byChef.get(r.chef_id) ?? [],
+    }));
+  }
+
+  async reviewPendingVerifications(
+    chefId: string,
+    status: VerificationStatus,
+    reviewedBy: string,
+    notes: string | null,
+    db: Queryable = getPool(),
+  ): Promise<ChefVerification[]> {
+    const { rows } = await db.query<VerificationRow>(
+      `UPDATE chef_verifications
+          SET status = $2, reviewed_by = $3, reviewed_at = now(), notes = $4
+        WHERE chef_id = $1 AND status = 'pending'
+        RETURNING *`,
+      [chefId, status, reviewedBy, notes],
+    );
+    return rows.map(mapVerificationRow);
+  }
+
+  async isSlugTaken(slug: string, db: Queryable = getPool()): Promise<boolean> {
+    const { rows } = await db.query('SELECT 1 FROM chef_profiles WHERE slug = $1', [slug]);
+    return rows.length > 0;
   }
 
   async findPublicBySlug(slug: string, db: Queryable = getPool()): Promise<PublicChefProfile | null> {

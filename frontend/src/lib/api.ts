@@ -114,12 +114,225 @@ export interface ChefProfileDto {
   reviews: ReviewDto[];
 }
 
+// ---- Booking DTOs (Phase 6 — mirror the booking API) -------------------------
+
+export interface BookingDto {
+  id: string;
+  eventId: string;
+  guestId: string;
+  seats: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
+  confirmationCode: string;
+  totalCents: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookingViewDto {
+  booking: BookingDto;
+  hold: { status: 'active' | 'consumed' | 'released' | 'expired'; expiresAt: string } | null;
+  payment: { status: string; failureReason: string | null } | null;
+  event: {
+    id: string;
+    slug: string;
+    title: string;
+    neighborhood: string;
+    startsAt: string;
+    priceCents: number;
+    imageSeed: number;
+  };
+}
+
+/** Server-side authed read (server components pass the access cookie's token). */
+export async function authedGetJson<T>(path: string, accessToken: string): Promise<T> {
+  const res = await fetch(`${backendUrl()}${path}`, {
+    headers: { authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as
+      | { error?: { code?: string; message?: string } }
+      | null;
+    throw new ApiError(
+      res.status,
+      body?.error?.code ?? 'UNKNOWN',
+      body?.error?.message ?? `Request failed (${res.status})`,
+    );
+  }
+  return res.json() as Promise<T>;
+}
+
+export function getBookingView(bookingId: string, accessToken: string): Promise<BookingViewDto> {
+  return authedGetJson<BookingViewDto>(
+    `/api/bookings/${encodeURIComponent(bookingId)}`,
+    accessToken,
+  );
+}
+
+// ---- Host portal DTOs (Phase 7 — mirror the host APIs) -----------------------
+
+export interface HostEventDto {
+  id: string;
+  slug: string;
+  title: string;
+  cuisine: string;
+  shortDescription: string;
+  neighborhood: string;
+  status: 'draft' | 'published' | 'unpublished' | 'cancelled' | 'completed';
+  startsAt: string;
+  durationMinutes: number;
+  priceCents: number;
+  seatsTotal: number;
+  seatsBooked: number;
+  imageSeed: number;
+  liveHeldSeats?: number;
+  confirmedBookings?: number;
+  courses?: Array<{ position: number; name: string; description: string }>;
+  tags?: string[];
+}
+
+export interface HostDashboardDto {
+  verificationStatus: 'pending' | 'approved' | 'rejected';
+  upcomingEvents: number;
+  seatsSold: number;
+  earningsNetCents: number;
+  rating: number;
+  nextEvent: HostEventDto | null;
+}
+
+export interface OnboardingStateDto {
+  profile: {
+    slug: string;
+    cuisine: string;
+    city: string;
+    tagline: string;
+    bio: string;
+    coverSeed: number;
+    verificationStatus: 'pending' | 'approved' | 'rejected';
+  };
+  verifications: Array<{ kind: string; status: string; notes: string | null; createdAt: string }>;
+}
+
+export interface RosterEntryDto {
+  bookingId: string;
+  confirmationCode: string;
+  guestName: string;
+  avatarSeed: number;
+  seats: number;
+  dietaryPrefs: string[];
+  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
+  paymentStatus: string | null;
+  totalCents: number;
+}
+
+export interface EarningsDto {
+  rows: Array<{
+    id: string;
+    eventTitle: string | null;
+    eventStartsAt: string | null;
+    confirmationCode: string | null;
+    grossCents: number;
+    feeCents: number;
+    netCents: number;
+    status: 'pending' | 'paid' | 'failed';
+    createdAt: string;
+  }>;
+  summary: {
+    lifetimeNetCents: number;
+    pendingNetCents: number;
+    paidNetCents: number;
+    feesWithheldCents: number;
+  };
+}
+
+export interface ReviewableDto {
+  reviewable: Array<{ bookingId: string; eventTitle: string; eventSlug: string; startsAt: string }>;
+}
+
+// ---- Admin portal DTOs (Phase 8 — mirror /api/admin/**) ----------------------
+
+export interface AdminMetricsDto {
+  pendingVerifications: number;
+  flaggedReviews: number;
+  usersByRole: { guest: number; host: number; admin: number };
+  bookingsLast30d: number;
+  grossRevenueCentsLast30d: number;
+  upcomingPublishedEvents: number;
+}
+
+export interface AdminVerificationItemDto {
+  chefId: string;
+  slug: string;
+  name: string;
+  email: string;
+  avatarSeed: number;
+  cuisine: string;
+  city: string;
+  tagline: string;
+  bio: string;
+  appliedAt: string;
+  verifications: Array<{
+    id: string;
+    kind: string;
+    status: 'pending' | 'approved' | 'rejected';
+    documentRef: string | null;
+    notes: string | null;
+    createdAt: string;
+  }>;
+}
+
+export interface AdminUserDto {
+  id: string;
+  email: string;
+  role: 'guest' | 'host' | 'admin';
+  fullName: string;
+  avatarSeed: number;
+  isSuspended: boolean;
+  createdAt: string;
+}
+
+export interface AdminUserListDto {
+  users: AdminUserDto[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface AdminPayoutDto {
+  id: string;
+  chefName: string;
+  eventTitle: string | null;
+  eventStartsAt: string | null;
+  confirmationCode: string | null;
+  grossCents: number;
+  feeCents: number;
+  netCents: number;
+  status: 'pending' | 'paid' | 'failed';
+  paidAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminFlaggedReviewDto {
+  id: string;
+  rating: number;
+  body: string;
+  createdAt: string;
+  flaggedAt: string;
+  author: { name: string; avatarSeed: number };
+  chef: { name: string; slug: string };
+  event: { title: string; slug: string; startsAt: string };
+}
+
 // ---- Endpoints --------------------------------------------------------------
 
 export interface EventQuery {
   cuisine?: string;
   maxPrice?: number;
   tags?: string[];
+  /** Search-bar fields (discovery spec): place text, YYYY-MM-DD, seats wanted. */
+  where?: string;
+  date?: string;
+  minSeats?: number;
   sort?: 'soonest' | 'price' | 'top-rated';
   limit?: number;
   offset?: number;
@@ -130,6 +343,9 @@ export function listEvents(query: EventQuery = {}): Promise<EventListResponse> {
   if (query.cuisine) params.set('cuisine', query.cuisine);
   if (query.maxPrice != null) params.set('maxPrice', String(query.maxPrice));
   if (query.tags?.length) params.set('tags', query.tags.join(','));
+  if (query.where) params.set('where', query.where);
+  if (query.date) params.set('date', query.date);
+  if (query.minSeats != null) params.set('minSeats', String(query.minSeats));
   if (query.sort) params.set('sort', query.sort);
   if (query.limit != null) params.set('limit', String(query.limit));
   if (query.offset != null) params.set('offset', String(query.offset));

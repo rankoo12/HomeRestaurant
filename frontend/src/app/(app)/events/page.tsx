@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { Button } from '@/components/atoms';
 import { EventCard, SearchBar } from '@/components/molecules';
-import { Footer, Nav } from '@/components/organisms';
+import { Footer } from '@/components/organisms';
+import { SiteNav } from '@/app/site-nav';
 import { listEvents } from '@/lib/api';
 import { toEventCardModel } from '@/lib/mappers';
 import { FiltersClient } from './filters-client';
@@ -13,9 +14,13 @@ interface SearchParams {
   tags?: string;
   maxPrice?: string;
   sort?: string;
+  where?: string;
+  date?: string;
+  seats?: string;
 }
 
 const SORTS = new Set(['soonest', 'price', 'top-rated']);
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export default async function EventsPage({
   searchParams,
@@ -30,26 +35,49 @@ export default async function EventsPage({
     | 'soonest'
     | 'price'
     | 'top-rated';
+  // Search-bar params: where / when / seats (discovery spec query params).
+  const where = sp.where?.trim() || undefined;
+  const date = sp.date && DATE_RE.test(sp.date) ? sp.date : undefined;
+  const seatsNum = sp.seats ? Number(sp.seats) : undefined;
+  const minSeats =
+    seatsNum && Number.isInteger(seatsNum) && seatsNum >= 1 && seatsNum <= 24
+      ? seatsNum
+      : undefined;
 
   const { events, total } = await listEvents({
     cuisine,
     tags: tags.length ? tags : undefined,
     maxPrice: maxPrice < 160 ? maxPrice : undefined,
+    where,
+    date,
+    minSeats,
     sort,
     limit: 24,
   });
   const models = events.map(toEventCardModel);
 
+  // The search bar carries the rail filters along, so a new search keeps them.
+  const extraParams: Record<string, string> = {};
+  if (sp.cuisine) extraParams.cuisine = sp.cuisine;
+  if (sp.tags) extraParams.tags = sp.tags;
+  if (sp.maxPrice) extraParams.maxPrice = sp.maxPrice;
+  if (sp.sort) extraParams.sort = sp.sort;
+
   return (
     <>
-      <Nav links={[{ href: '/events', label: 'Browse', active: true }]} />
+      <SiteNav links={[{ href: '/events', label: 'Browse', active: true }]} />
 
       <section className="border-b border-line bg-bg-2">
         <div className="mx-auto flex max-w-[1240px] flex-col items-center gap-[22px] px-8 pb-[34px] pt-10 text-center">
           <h1 className="max-w-[640px] font-serif text-[40px] leading-tight text-balance">
             Find a seat at a <span className="italic text-gold-2">home dinner</span> near you
           </h1>
-          <SearchBar />
+          <SearchBar
+            initialWhere={where}
+            initialDate={date}
+            initialSeats={minSeats}
+            extraParams={extraParams}
+          />
         </div>
       </section>
 

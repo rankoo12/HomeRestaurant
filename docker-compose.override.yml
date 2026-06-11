@@ -1,0 +1,7 @@
+# Local override — host port 5432 is taken by another Docker project, and 5433
+# by a native PostgreSQL 18 install. Map our Postgres to a free host port (5440).
+# Not committed; safe to delete. !override replaces the base ports list.
+services:
+  postgres:
+    ports: !override
+      - '5440:5432'

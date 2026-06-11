@@ -28,7 +28,12 @@ export default function LoginPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setError(data?.error?.message ?? 'Login failed');
+        // 429 = rate limited (Phase 8 hardening) — say so in plain words.
+        setError(
+          res.status === 429
+            ? 'Too many attempts — wait a minute and try again.'
+            : (data?.error?.message ?? 'Login failed'),
+        );
         return;
       }
       router.push('/guest/dashboard');

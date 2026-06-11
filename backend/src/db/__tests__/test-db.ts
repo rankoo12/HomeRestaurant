@@ -22,6 +22,7 @@ const TEST_TABLES = [
   'payments',
   'payouts',
   'reviews',
+  'stripe_webhook_events',
 ];
 
 export function testDatabaseUrl(): string | undefined {

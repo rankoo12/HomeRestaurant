@@ -12,7 +12,13 @@ export function registerErrorHandler(app: FastifyInstance): void {
   app.setErrorHandler(
     (error: FastifyError | AppError | ZodError, req: FastifyRequest, reply: FastifyReply) => {
       if (error instanceof AppError) {
-        reply.status(error.status).send({ error: { code: error.code, message: error.message } });
+        reply.status(error.status).send({
+          error: {
+            code: error.code,
+            message: error.message,
+            ...(error.details ? { details: error.details } : {}),
+          },
+        });
         return;
       }
 
