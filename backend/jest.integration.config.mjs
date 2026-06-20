@@ -19,4 +19,7 @@ export default {
   testMatch: ['**/__tests__/**/*.integration.test.ts'],
   setupFiles: ['<rootDir>/jest.integration.setup.mjs'],
   clearMocks: true,
+  // Real DB round-trips + serial argon2 hashing; the 5s default is too tight for
+  // the multi-host booking/refund flows. Give each test room without masking hangs.
+  testTimeout: 30_000,
 };
