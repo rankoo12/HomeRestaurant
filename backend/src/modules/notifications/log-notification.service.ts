@@ -1,6 +1,7 @@
 import type {
   BookingCancelledNotification,
   BookingConfirmedNotification,
+  HostApprovedNotification,
   NotificationService,
 } from './interfaces.js';
 
@@ -25,6 +26,7 @@ export class LogNotificationService implements NotificationService {
         startsAt: input.startsAt.toISOString(),
         seats: input.seats,
         totalCents: input.totalCents,
+        addressLine: input.addressLine,
       },
       `Booking confirmed: ${input.confirmationCode} — ${input.seats} seat(s) for "${input.eventTitle}"`,
     );
@@ -40,6 +42,13 @@ export class LogNotificationService implements NotificationService {
         refunded: input.refunded,
       },
       `Booking cancelled by host: "${input.eventTitle}"${input.refunded ? ' (refunded)' : ''}`,
+    );
+  }
+
+  async hostApproved(input: HostApprovedNotification): Promise<void> {
+    this.log(
+      { notification: 'host-approved', hostId: input.hostId, chefSlug: input.chefSlug },
+      `Host approved: ${input.hostName} (/chefs/${input.chefSlug})`,
     );
   }
 }

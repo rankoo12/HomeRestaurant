@@ -248,8 +248,12 @@ export class BookingService {
       booking.status = 'cancelled';
     }
 
-    const event = await this.events.findById(booking.eventId);
+    const event = await this.events.findByIdWithDetails(booking.eventId);
     if (!event) throw new AppError('NOT_FOUND', 'Event not found');
+
+    // The exact address is revealed only once the booking is CONFIRMED — a
+    // pending hold doesn't unlock the host's home address.
+    const revealed = booking.status === 'confirmed';
 
     return {
       booking,
@@ -263,6 +267,10 @@ export class BookingService {
         startsAt: event.startsAt,
         priceCents: event.priceCents,
         imageSeed: event.imageSeed,
+        coverPhoto: event.photos[0] ?? null,
+        addressLine: revealed ? event.addressLine : null,
+        latitude: revealed ? event.latitude : null,
+        longitude: revealed ? event.longitude : null,
       },
     };
   }

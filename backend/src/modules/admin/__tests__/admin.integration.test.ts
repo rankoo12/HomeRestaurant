@@ -108,6 +108,10 @@ maybe('admin portal (integration)', () => {
         durationMinutes: 180,
         priceCents: 4400,
         seatsTotal: 8,
+        addressLine: '8 Levinsky Street, Tel Aviv',
+        photos: [
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        ],
         courses: [{ position: 1, name: 'Mezze', description: 'Everything at once, the right way.' }],
         tags: ['vegetarian'],
       },

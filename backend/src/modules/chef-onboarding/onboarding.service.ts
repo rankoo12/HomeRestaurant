@@ -26,8 +26,13 @@ export interface OnboardingSubmission {
   tagline: string;
   bio: string;
   coverSeed?: number;
-  idDocument: { kind: 'passport' | 'drivers_license' | 'national_id'; reference: string };
-  foodSafety: { declared: true; certificateRef?: string };
+  idDocument: {
+    kind: 'passport' | 'drivers_license' | 'national_id';
+    reference: string;
+    /** Optional uploaded image as a base64 data URL. */
+    image?: string;
+  };
+  foodSafety: { declared: true; certificateRef?: string; image?: string };
 }
 
 export interface OnboardingState {
@@ -80,7 +85,11 @@ export class OnboardingService {
           {
             chefId: userId,
             kind: 'id_document',
-            documentRef: `${input.idDocument.kind}:${input.idDocument.reference}`,
+            // Prefer the uploaded image (the artifact the admin reviews); else
+            // fall back to the typed document reference.
+            documentRef:
+              input.idDocument.image ??
+              `${input.idDocument.kind}:${input.idDocument.reference}`,
           },
           client,
         ),
@@ -88,7 +97,7 @@ export class OnboardingService {
           {
             chefId: userId,
             kind: 'food_safety_cert',
-            documentRef: input.foodSafety.certificateRef ?? 'declared',
+            documentRef: input.foodSafety.image ?? input.foodSafety.certificateRef ?? 'declared',
           },
           client,
         ),

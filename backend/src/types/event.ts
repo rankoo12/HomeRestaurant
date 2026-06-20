@@ -10,6 +10,12 @@ export interface Event {
   shortDescription: string;
   neighborhood: string;
   status: EventStatus;
+  /** Public area label (e.g. "Bed-Stuy, Brooklyn"). Safe to show anyone. */
+  // (neighborhood already declared above)
+  /** Exact address — sensitive; revealed only to a booked guest/host/admin. */
+  addressLine: string | null;
+  latitude: number | null;
+  longitude: number | null;
   startsAt: Date;
   durationMinutes: number;
   priceCents: number;
@@ -38,6 +44,8 @@ export interface EventTag {
 export interface EventWithDetails extends Event {
   courses: EventCourse[];
   tags: string[];
+  /** Gallery photos (base64 data URLs), cover first. At least one. */
+  photos: string[];
 }
 
 export interface NewEvent {
@@ -54,6 +62,11 @@ export interface NewEvent {
   seatsTotal: number;
   seatsBooked?: number;
   imageSeed?: number;
+  addressLine?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  /** Gallery photos (base64 data URLs), cover first. At least one required. */
+  photos?: string[];
   courses?: Array<Omit<EventCourse, 'id' | 'eventId'>>;
   tags?: string[];
 }

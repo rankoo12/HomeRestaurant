@@ -21,7 +21,25 @@ export function getPool(): pg.Pool {
     throw new Error('DATABASE_URL is not set — cannot create a database pool.');
   }
 
-  pool = new Pool({ connectionString: env.DATABASE_URL });
+  pool = new Pool({
+    connectionString: env.DATABASE_URL,
+    // Resilience against stale/dropped connections (Docker/WSL networking can
+    // silently kill idle sockets). TCP keepalive detects dead peers; a short
+    // idle timeout recycles connections before they rot; a finite connect
+    // timeout fails fast instead of hanging ~30s on a dead socket.
+    keepAlive: true,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+    max: 10,
+  });
+
+  // An idle client erroring must not crash the process — pg drops it from the
+  // pool and the next query gets a fresh connection. Without this handler the
+  // 'error' event is unhandled and takes the server down.
+  pool.on('error', (err) => {
+    console.error('Idle Postgres client error (connection recycled):', err.message);
+  });
+
   return pool;
 }
 

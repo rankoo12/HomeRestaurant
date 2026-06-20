@@ -27,8 +27,8 @@ export function Logo({ size = 20, mono = false }: LogoProps) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="font-serif leading-none tracking-[0.01em]" style={{ fontSize: size }}>
-        Home <span className={cn('italic', !mono && 'text-gold-2')}>Restaurant</span>
+      <span className={cn('font-serif italic leading-none tracking-[0.01em]', !mono && 'text-gold-2')} style={{ fontSize: size }}>
+        Ratatouille
       </span>
     </div>
   );

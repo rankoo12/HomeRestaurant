@@ -35,6 +35,7 @@ function toListDto(item: EventListItem) {
     seatsTotal: item.seatsTotal,
     seatsLeft: item.seatsLeft,
     imageSeed: item.imageSeed,
+    coverPhoto: item.coverPhoto,
     chef: item.chef,
   };
 }
@@ -84,6 +85,7 @@ export async function registerEventRoutes(app: FastifyInstance): Promise<void> {
       seatsTotal: event.seatsTotal,
       seatsLeft: event.seatsTotal - event.seatsBooked,
       imageSeed: event.imageSeed,
+      photos: event.photos,
       courses: event.courses.map((c) => ({
         position: c.position,
         name: c.name,

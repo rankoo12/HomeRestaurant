@@ -1,7 +1,7 @@
 import { getPool } from '../../db/index.js';
 import type { Queryable } from '../../db/index.js';
 import type { Booking, BookingStatus, NewBooking } from '../../types/index.js';
-import type { BookingRepository, RosterEntry } from './interfaces.js';
+import type { BookingRepository, GuestBookingEntry, RosterEntry } from './interfaces.js';
 
 interface BookingRow {
   id: string;
@@ -70,6 +70,50 @@ export class PostgresBookingRepository implements BookingRepository {
       [guestId],
     );
     return rows.map(mapRow);
+  }
+
+  async listMineWithEvent(
+    guestId: string,
+    db: Queryable = getPool(),
+  ): Promise<GuestBookingEntry[]> {
+    const { rows } = await db.query<{
+      booking_id: string;
+      confirmation_code: string;
+      seats: number;
+      booking_status: BookingStatus;
+      total_cents: number;
+      event_slug: string;
+      event_title: string;
+      event_starts_at: Date;
+      event_neighborhood: string;
+      event_image_seed: number;
+      chef_name: string;
+    }>(
+      `SELECT b.id AS booking_id, b.confirmation_code, b.seats,
+              b.status AS booking_status, b.total_cents,
+              e.slug AS event_slug, e.title AS event_title, e.starts_at AS event_starts_at,
+              e.neighborhood AS event_neighborhood, e.image_seed AS event_image_seed,
+              u.full_name AS chef_name
+         FROM bookings b
+         JOIN events e ON e.id = b.event_id
+         JOIN users u ON u.id = e.chef_id
+        WHERE b.guest_id = $1
+        ORDER BY e.starts_at DESC`,
+      [guestId],
+    );
+    return rows.map((r) => ({
+      bookingId: r.booking_id,
+      confirmationCode: r.confirmation_code,
+      seats: r.seats,
+      bookingStatus: r.booking_status,
+      totalCents: r.total_cents,
+      eventSlug: r.event_slug,
+      eventTitle: r.event_title,
+      eventStartsAt: r.event_starts_at,
+      eventNeighborhood: r.event_neighborhood,
+      eventImageSeed: r.event_image_seed,
+      chefName: r.chef_name,
+    }));
   }
 
   async listConfirmedByEvent(eventId: string, db: Queryable = getPool()): Promise<Booking[]> {

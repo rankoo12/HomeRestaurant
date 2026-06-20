@@ -62,12 +62,29 @@ export default async function HostEventsPage() {
                   className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-5 md:flex-row md:items-center md:justify-between"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
-                      <FoodImage seed={event.imageSeed} />
-                    </div>
+                    <Link
+                      href={
+                        event.status === 'published'
+                          ? `/events/${event.slug}`
+                          : `/host/events/${event.id}/edit`
+                      }
+                      className="h-16 w-16 shrink-0 overflow-hidden rounded-md"
+                      aria-label={`View ${event.title}`}
+                    >
+                      <FoodImage seed={event.imageSeed} src={event.coverPhoto} alt={event.title} />
+                    </Link>
                     <div className="flex flex-col gap-1.5">
                       <span className="flex items-center gap-2.5">
-                        <span className="font-serif text-lg leading-snug">{event.title}</span>
+                        <Link
+                          href={
+                            event.status === 'published'
+                              ? `/events/${event.slug}`
+                              : `/host/events/${event.id}/edit`
+                          }
+                          className="font-serif text-lg leading-snug hover:text-gold-2"
+                        >
+                          {event.title}
+                        </Link>
                         <Badge tone={STATUS_TONE[event.status] ?? 'soon'}>{event.status}</Badge>
                       </span>
                       <span className="text-[13px] text-text-2">

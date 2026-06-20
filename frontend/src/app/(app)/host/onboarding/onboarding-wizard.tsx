@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input } from '@/components/atoms';
+import { Button, Icon, Input } from '@/components/atoms';
 import { FoodImage } from '@/components/molecules';
 import { cn } from '@/lib/cn';
 
@@ -29,8 +29,30 @@ interface WizardData {
   coverSeed: number;
   docKind: 'passport' | 'drivers_license' | 'national_id';
   docReference: string;
+  docImage: string; // base64 data URL, '' if none
   foodSafetyDeclared: boolean;
   certificateRef: string;
+  certImage: string; // base64 data URL, '' if none
+}
+
+const MAX_UPLOAD_BYTES = 2_000_000; // ~2MB original
+
+/** Read a chosen image file to a base64 data URL, rejecting non-images / too-large. */
+function readImageFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) {
+      reject(new Error('Please choose a PNG, JPEG, or WebP image.'));
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      reject(new Error('Image is too large (max 2MB).'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Could not read that file.'));
+    reader.readAsDataURL(file);
+  });
 }
 
 /**
@@ -53,9 +75,22 @@ export function OnboardingWizard({ suggestedName }: { suggestedName: string }) {
     coverSeed: 3,
     docKind: 'passport',
     docReference: '',
+    docImage: '',
     foodSafetyDeclared: false,
     certificateRef: '',
+    certImage: '',
   });
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function pickImage(field: 'docImage' | 'certImage', file: File | undefined) {
+    if (!file) return;
+    setUploadError(null);
+    try {
+      set(field, await readImageFile(file));
+    } catch (e) {
+      setUploadError((e as Error).message);
+    }
+  }
 
   const set = <K extends keyof WizardData>(key: K, value: WizardData[K]) =>
     setData((d) => ({ ...d, [key]: value }));
@@ -97,10 +132,15 @@ export function OnboardingWizard({ suggestedName }: { suggestedName: string }) {
           tagline: data.tagline,
           bio: data.bio,
           coverSeed: data.coverSeed,
-          idDocument: { kind: data.docKind, reference: data.docReference },
+          idDocument: {
+            kind: data.docKind,
+            reference: data.docReference,
+            ...(data.docImage ? { image: data.docImage } : {}),
+          },
           foodSafety: {
             declared: true,
             ...(data.certificateRef ? { certificateRef: data.certificateRef } : {}),
+            ...(data.certImage ? { image: data.certImage } : {}),
           },
         }),
       });
@@ -236,6 +276,14 @@ export function OnboardingWizard({ suggestedName }: { suggestedName: string }) {
               onChange={(e) => set('docReference', e.target.value)}
               placeholder="P-1234567"
             />
+            <ImageUpload
+              label="Photo of your document"
+              hint="Clear photo of your ID (PNG/JPEG/WebP, max 2MB)"
+              value={data.docImage}
+              onPick={(f) => pickImage('docImage', f)}
+              onClear={() => set('docImage', '')}
+            />
+            {uploadError && <p className="text-[13px] text-terra">{uploadError}</p>}
           </>
         )}
 
@@ -264,6 +312,14 @@ export function OnboardingWizard({ suggestedName }: { suggestedName: string }) {
               placeholder="FS-2026-001"
               hint="Reference number, if you hold one"
             />
+            <ImageUpload
+              label="Photo of your certificate (optional)"
+              hint="If you hold a food-safety certificate (PNG/JPEG/WebP, max 2MB)"
+              value={data.certImage}
+              onPick={(f) => pickImage('certImage', f)}
+              onClear={() => set('certImage', '')}
+            />
+            {uploadError && <p className="text-[13px] text-terra">{uploadError}</p>}
           </>
         )}
 
@@ -306,6 +362,56 @@ export function OnboardingWizard({ suggestedName }: { suggestedName: string }) {
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** File picker with a thumbnail preview and a remove control. */
+function ImageUpload({
+  label,
+  hint,
+  value,
+  onPick,
+  onClear,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onPick: (file: File | undefined) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-semibold">{label}</span>
+      {value ? (
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- local base64 preview, not a remote asset */}
+          <img
+            src={value}
+            alt="Uploaded document preview"
+            className="h-20 w-28 rounded-md border border-line object-cover"
+          />
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-[13px] text-text-2 underline-offset-2 hover:text-text hover:underline"
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-line-strong bg-bg-2 px-3.5 py-5 text-sm text-text-2 transition-colors hover:border-gold-line hover:text-text">
+          <Icon name="cam" size={16} className="text-gold" />
+          Choose a photo
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => onPick(e.target.files?.[0])}
+          />
+        </label>
+      )}
+      <span className="text-xs text-text-3">{hint}</span>
     </div>
   );
 }

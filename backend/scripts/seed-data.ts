@@ -28,6 +28,9 @@ export interface SeedEvent {
   cuisine: string;
   shortDescription: string;
   neighborhood: string;
+  addressLine: string;
+  latitude: number;
+  longitude: number;
   startsAt: string; // ISO
   durationMinutes: number;
   priceCents: number;
@@ -116,6 +119,9 @@ export const SEED_EVENTS: SeedEvent[] = [
     shortDescription:
       'A loud, generous family-style feast built around smoky jollof, grilled suya and fried plantain.',
     neighborhood: 'Bed-Stuy, Brooklyn',
+    addressLine: '123 Greene Ave, Brooklyn, NY 11216',
+    latitude: 40.6857,
+    longitude: -73.9442,
     startsAt: '2026-06-07T18:30:00-04:00',
     durationMinutes: 180,
     priceCents: 6800,
@@ -142,6 +148,9 @@ export const SEED_EVENTS: SeedEvent[] = [
     shortDescription:
       'Five slow courses of Emilian cooking, finishing with tortellini floated in a 12-hour capon brodo.',
     neighborhood: 'North End, Boston',
+    addressLine: '47 Salem St, Boston, MA 02113',
+    latitude: 42.3647,
+    longitude: -71.056,
     startsAt: '2026-06-09T19:00:00-04:00',
     durationMinutes: 210,
     priceCents: 9500,
@@ -165,6 +174,9 @@ export const SEED_EVENTS: SeedEvent[] = [
     shortDescription:
       'Seven quiet, intentional courses that follow the market. A single sitting at a counter for eight.',
     neighborhood: 'Mission, San Francisco',
+    addressLine: '2901 24th St, San Francisco, CA 94110',
+    latitude: 37.7525,
+    longitude: -122.4108,
     startsAt: '2026-06-13T18:00:00-07:00',
     durationMinutes: 150,
     priceCents: 14000,
@@ -188,6 +200,9 @@ export const SEED_EVENTS: SeedEvent[] = [
     shortDescription:
       'A three-day mole negro, fresh-pressed masa and a guided mezcal flight from small Oaxacan palenques.',
     neighborhood: 'Pilsen, Chicago',
+    addressLine: '1801 S Racine Ave, Chicago, IL 60608',
+    latitude: 41.8576,
+    longitude: -87.6566,
     startsAt: '2026-06-12T19:30:00-05:00',
     durationMinutes: 180,
     priceCents: 8200,
@@ -210,6 +225,9 @@ export const SEED_EVENTS: SeedEvent[] = [
     shortDescription:
       'A looser, later night of West African small plates with a highlife record collection on rotation.',
     neighborhood: 'Bed-Stuy, Brooklyn',
+    addressLine: '845 Lexington Ave, Brooklyn, NY 11221',
+    latitude: 40.6901,
+    longitude: -73.927,
     startsAt: '2026-06-19T20:00:00-04:00',
     durationMinutes: 150,
     priceCents: 5400,
@@ -231,6 +249,9 @@ export const SEED_EVENTS: SeedEvent[] = [
     shortDescription:
       'Roll your own tortellini alongside Luca, then sit down to eat the spoils with a bottle of Lambrusco.',
     neighborhood: 'North End, Boston',
+    addressLine: '12 Fleet St, Boston, MA 02113',
+    latitude: 42.366,
+    longitude: -71.0535,
     startsAt: '2026-06-21T17:00:00-04:00',
     durationMinutes: 240,
     priceCents: 12000,

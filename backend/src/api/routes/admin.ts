@@ -9,6 +9,7 @@ import { PostgresChefRepository } from '../../modules/chef-onboarding/postgres.c
 import { PostgresEventRepository } from '../../modules/events/postgres.event-repository.js';
 import { PostgresPayoutRepository } from '../../modules/payments/postgres.payout-repository.js';
 import { PostgresReviewRepository } from '../../modules/reviews/postgres.review-repository.js';
+import type { ServiceContainer } from '../service-container.js';
 
 /**
  * Admin portal API — Phase 8 (docs/specs/admin.md §4). Everything here is
@@ -44,7 +45,10 @@ const rejectSchema = z.object({
 // `admin` is deliberately absent — not grantable via API (admin spec §6/§11).
 const roleSchema = z.object({ role: z.enum(['guest', 'host']) });
 
-export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
+export async function registerAdminRoutes(
+  app: FastifyInstance,
+  services: ServiceContainer,
+): Promise<void> {
   const service = new AdminService(
     new PostgresUserRepository(),
     new PostgresChefRepository(),
@@ -54,6 +58,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     new PostgresAdminMetricsRepository(),
     new RefreshStore(),
     (payload, message) => app.log.info(payload, message),
+    services.notifier,
   );
 
   const guard = { preHandler: [authenticate, requireRole('admin')] };

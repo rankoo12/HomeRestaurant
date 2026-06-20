@@ -10,6 +10,10 @@ import { FakePaymentGateway } from '../../payments/__tests__/fake-gateway.js';
 
 const maybe = testDatabaseUrl() ? describe : describe.skip;
 
+// 1×1 transparent PNG as a data URL — satisfies the createSchema photo regex.
+const TEST_PHOTO =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
 const VALID_EVENT = {
   title: 'Harvest Table',
   cuisine: 'Levantine',
@@ -18,6 +22,8 @@ const VALID_EVENT = {
   durationMinutes: 180,
   priceCents: 6000,
   seatsTotal: 8,
+  addressLine: '12 Florentin Street, Tel Aviv',
+  photos: [TEST_PHOTO],
   courses: [{ position: 1, name: 'To start', description: 'Seasonal mezze for the table' }],
   tags: ['Communal table'],
 };

@@ -210,6 +210,7 @@ export class PaymentService {
             startsAt: event_.startsAt,
             seats: booking.seats,
             totalCents: booking.totalCents,
+            addressLine: event_.addressLine,
           });
         }
       } catch {

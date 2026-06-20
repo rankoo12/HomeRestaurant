@@ -22,6 +22,7 @@ interface DiscoveryRow {
   seats_total: number;
   seats_left: number;
   image_seed: number;
+  cover_photo: string | null;
   chef_slug: string;
   chef_name: string;
   chef_avatar_seed: number;
@@ -37,6 +38,9 @@ interface EventRow {
   cuisine: string;
   short_description: string;
   neighborhood: string;
+  address_line: string | null;
+  latitude: number | null;
+  longitude: number | null;
   status: Event['status'];
   starts_at: Date;
   duration_minutes: number;
@@ -57,6 +61,9 @@ function mapRow(row: EventRow): Event {
     cuisine: row.cuisine,
     shortDescription: row.short_description,
     neighborhood: row.neighborhood,
+    addressLine: row.address_line,
+    latitude: row.latitude,
+    longitude: row.longitude,
     status: row.status,
     startsAt: row.starts_at,
     durationMinutes: row.duration_minutes,
@@ -77,9 +84,11 @@ export class PostgresEventRepository implements EventRepository {
       const { rows } = await client.query<EventRow>(
         `INSERT INTO events
            (slug, chef_id, title, cuisine, short_description, neighborhood, status,
-            starts_at, duration_minutes, price_cents, seats_total, seats_booked, image_seed)
+            starts_at, duration_minutes, price_cents, seats_total, seats_booked, image_seed,
+            address_line, latitude, longitude)
          VALUES ($1,$2,$3,$4,$5,$6, COALESCE($7::event_status,'draft'),
-                 $8,$9,$10,$11, COALESCE($12::integer,0), COALESCE($13::integer,0))
+                 $8,$9,$10,$11, COALESCE($12::integer,0), COALESCE($13::integer,0),
+                 $14, $15, $16)
          RETURNING *`,
         [
           input.slug,
@@ -95,6 +104,9 @@ export class PostgresEventRepository implements EventRepository {
           input.seatsTotal,
           input.seatsBooked ?? null,
           input.imageSeed ?? null,
+          input.addressLine ?? null,
+          input.latitude ?? null,
+          input.longitude ?? null,
         ],
       );
       const event = rows[0];
@@ -113,6 +125,7 @@ export class PostgresEventRepository implements EventRepository {
           label,
         ]);
       }
+      await writePhotos(client, event.id, input.photos ?? []);
 
       return this.assembleDetails(mapRow(event), client);
     };
@@ -207,6 +220,8 @@ export class PostgresEventRepository implements EventRepository {
          e.id, e.slug, e.title, e.cuisine, e.neighborhood, e.starts_at,
          e.price_cents, e.seats_total, (e.seats_total - e.seats_booked) AS seats_left,
          e.image_seed,
+         (SELECT ep.image_data FROM event_photos ep
+           WHERE ep.event_id = e.id ORDER BY ep.position LIMIT 1) AS cover_photo,
          cp.slug AS chef_slug, u.full_name AS chef_name, u.avatar_seed AS chef_avatar_seed,
          COALESCE(s.rating, 0) AS chef_rating, cp.is_superhost AS chef_is_superhost
        ${base}
@@ -236,7 +251,10 @@ export class PostgresEventRepository implements EventRepository {
            duration_minutes  = COALESCE($7::integer, duration_minutes),
            price_cents       = COALESCE($8::integer, price_cents),
            seats_total       = COALESCE($9::integer, seats_total),
-           image_seed        = COALESCE($10::integer, image_seed)
+           image_seed        = COALESCE($10::integer, image_seed),
+           address_line      = COALESCE($11, address_line),
+           latitude          = COALESCE($12::double precision, latitude),
+           longitude         = COALESCE($13::double precision, longitude)
          WHERE id = $1 RETURNING *`,
         [
           id,
@@ -249,11 +267,17 @@ export class PostgresEventRepository implements EventRepository {
           fields.priceCents ?? null,
           fields.seatsTotal ?? null,
           fields.imageSeed ?? null,
+          fields.addressLine ?? null,
+          fields.latitude ?? null,
+          fields.longitude ?? null,
         ],
       );
       const row = rows[0];
       if (!row) throw new Error(`events UPDATE: no row for id ${id}`);
 
+      if (fields.photos) {
+        await writePhotos(client, id, fields.photos);
+      }
       if (fields.courses) {
         await client.query('DELETE FROM event_courses WHERE event_id = $1', [id]);
         for (const course of fields.courses) {
@@ -287,14 +311,16 @@ export class PostgresEventRepository implements EventRepository {
 
   async listByChef(chefId: string, db: Queryable = getPool()): Promise<HostEventListItem[]> {
     const { rows } = await db.query<
-      EventRow & { live_held_seats: string; confirmed_bookings: string }
+      EventRow & { live_held_seats: string; confirmed_bookings: string; cover_photo: string | null }
     >(
       `SELECT e.*,
               COALESCE((SELECT SUM(sh.seats) FROM seat_holds sh
                          WHERE sh.event_id = e.id AND sh.status = 'active'
                            AND sh.expires_at > now()), 0)::text AS live_held_seats,
               (SELECT COUNT(*) FROM bookings b
-                WHERE b.event_id = e.id AND b.status = 'confirmed')::text AS confirmed_bookings
+                WHERE b.event_id = e.id AND b.status = 'confirmed')::text AS confirmed_bookings,
+              (SELECT ep.image_data FROM event_photos ep
+                WHERE ep.event_id = e.id ORDER BY ep.position LIMIT 1) AS cover_photo
          FROM events e
         WHERE e.chef_id = $1
         ORDER BY e.starts_at DESC`,
@@ -304,6 +330,7 @@ export class PostgresEventRepository implements EventRepository {
       ...mapRow(row),
       liveHeldSeats: Number(row.live_held_seats),
       confirmedBookings: Number(row.confirmed_bookings),
+      coverPhoto: row.cover_photo,
     }));
   }
 
@@ -340,6 +367,11 @@ export class PostgresEventRepository implements EventRepository {
       [event.id],
     );
 
+    const photos = await db.query<{ image_data: string }>(
+      'SELECT image_data FROM event_photos WHERE event_id = $1 ORDER BY position',
+      [event.id],
+    );
+
     const mappedCourses: EventCourse[] = courses.rows.map((c) => ({
       id: c.id,
       eventId: c.event_id,
@@ -348,7 +380,23 @@ export class PostgresEventRepository implements EventRepository {
       description: c.description,
     }));
 
-    return { ...event, courses: mappedCourses, tags: tags.rows.map((t) => t.label) };
+    return {
+      ...event,
+      courses: mappedCourses,
+      tags: tags.rows.map((t) => t.label),
+      photos: photos.rows.map((p) => p.image_data),
+    };
+  }
+}
+
+/** Replace an event's gallery with the given ordered photos (position 0 = cover). */
+async function writePhotos(db: Queryable, eventId: string, photos: string[]): Promise<void> {
+  await db.query('DELETE FROM event_photos WHERE event_id = $1', [eventId]);
+  for (let i = 0; i < photos.length; i++) {
+    await db.query(
+      'INSERT INTO event_photos (event_id, position, image_data) VALUES ($1, $2, $3)',
+      [eventId, i, photos[i]],
+    );
   }
 }
 
@@ -404,6 +452,7 @@ function mapDiscoveryRow(row: DiscoveryRow): EventListItem {
     seatsTotal: row.seats_total,
     seatsLeft: row.seats_left,
     imageSeed: row.image_seed,
+    coverPhoto: row.cover_photo,
     chef: {
       slug: row.chef_slug,
       name: row.chef_name,

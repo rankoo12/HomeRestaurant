@@ -13,6 +13,8 @@ export interface BookingConfirmedNotification {
   startsAt: Date;
   seats: number;
   totalCents: number;
+  /** Exact address — included now that the booking is confirmed. */
+  addressLine: string | null;
 }
 
 export interface BookingCancelledNotification {
@@ -22,9 +24,17 @@ export interface BookingCancelledNotification {
   refunded: boolean;
 }
 
+export interface HostApprovedNotification {
+  hostId: string;
+  hostName: string;
+  chefSlug: string;
+}
+
 export interface NotificationService {
   /** Fire-and-forget: callers must never fail a booking flow on notify errors. */
   bookingConfirmed(input: BookingConfirmedNotification): Promise<void>;
   /** Host cancelled the event (events spec §3). Fire-and-forget. */
   bookingCancelled(input: BookingCancelledNotification): Promise<void>;
+  /** Host application approved by an admin. Fire-and-forget. */
+  hostApproved(input: HostApprovedNotification): Promise<void>;
 }

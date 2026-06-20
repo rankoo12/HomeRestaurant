@@ -53,6 +53,7 @@ export interface EventListItemDto {
   seatsTotal: number;
   seatsLeft: number;
   imageSeed: number;
+  coverPhoto: string | null;
   chef: ChefSummaryDto;
 }
 
@@ -80,6 +81,7 @@ export interface ChefStatsDto {
 export interface EventDetailDto extends EventListItemDto {
   shortDescription: string;
   durationMinutes: number;
+  photos: string[];
   courses: Array<{ position: number; name: string; description: string }>;
   tags: string[];
   chef: ChefSummaryDto & {
@@ -140,6 +142,10 @@ export interface BookingViewDto {
     startsAt: string;
     priceCents: number;
     imageSeed: number;
+    coverPhoto?: string | null;
+    addressLine?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
   };
 }
 
@@ -185,6 +191,11 @@ export interface HostEventDto {
   seatsTotal: number;
   seatsBooked: number;
   imageSeed: number;
+  addressLine?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  photos?: string[]; // present on getOwn (edit)
+  coverPhoto?: string | null; // present on listOwn (list)
   liveHeldSeats?: number;
   confirmedBookings?: number;
   courses?: Array<{ position: number; name: string; description: string }>;
@@ -247,6 +258,25 @@ export interface EarningsDto {
 
 export interface ReviewableDto {
   reviewable: Array<{ bookingId: string; eventTitle: string; eventSlug: string; startsAt: string }>;
+}
+
+export interface GuestBookingDto {
+  bookingId: string;
+  confirmationCode: string;
+  seats: number;
+  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
+  totalCents: number;
+  eventSlug: string;
+  eventTitle: string;
+  eventStartsAt: string;
+  eventNeighborhood: string;
+  eventImageSeed: number;
+  chefName: string;
+}
+
+export interface GuestBookingsDto {
+  upcoming: GuestBookingDto[];
+  past: GuestBookingDto[];
 }
 
 // ---- Admin portal DTOs (Phase 8 — mirror /api/admin/**) ----------------------

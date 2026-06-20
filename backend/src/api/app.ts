@@ -74,7 +74,7 @@ export async function buildApp(
   await registerOnboardingRoutes(app);
   await registerHostEventRoutes(app, services);
   await registerReviewRoutes(app);
-  await registerAdminRoutes(app);
+  await registerAdminRoutes(app, services);
 
   return app;
 }

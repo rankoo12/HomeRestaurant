@@ -15,11 +15,28 @@ export interface BookingRepository {
   /** Row-locked read — only meaningful inside a transaction (confirm flow §6b). */
   findByIdForUpdate(id: string, db: Queryable): Promise<Booking | null>;
   listByGuest(guestId: string, db?: Queryable): Promise<Booking[]>;
+  /** A guest's bookings joined with event display fields, for the guest dashboard. */
+  listMineWithEvent(guestId: string, db?: Queryable): Promise<GuestBookingEntry[]>;
   /** Confirmed bookings for an event (host-cancel refund pass — events spec §3). */
   listConfirmedByEvent(eventId: string, db?: Queryable): Promise<Booking[]>;
   /** Guest roster: bookings joined with guest display + payment status (events spec §4). */
   listRosterByEvent(eventId: string, db?: Queryable): Promise<RosterEntry[]>;
   updateStatus(id: string, status: BookingStatus, db?: Queryable): Promise<Booking>;
+}
+
+/** One booking row on /guest/dashboard, joined with its event. */
+export interface GuestBookingEntry {
+  bookingId: string;
+  confirmationCode: string;
+  seats: number;
+  bookingStatus: BookingStatus;
+  totalCents: number;
+  eventSlug: string;
+  eventTitle: string;
+  eventStartsAt: Date;
+  eventNeighborhood: string;
+  eventImageSeed: number;
+  chefName: string;
 }
 
 /** One roster row on /host/events/:id/guests. */
@@ -68,5 +85,10 @@ export interface BookingView {
     startsAt: Date;
     priceCents: number;
     imageSeed: number;
+    coverPhoto: string | null;
+    /** Exact location — only populated once the booking is confirmed. */
+    addressLine: string | null;
+    latitude: number | null;
+    longitude: number | null;
   };
 }

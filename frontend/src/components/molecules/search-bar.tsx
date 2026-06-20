@@ -80,6 +80,16 @@ export function SearchBar({
     return new Date(base.getFullYear(), base.getMonth(), 1);
   });
 
+  // Keep the bar in sync with the active URL params. When the /events page
+  // re-renders with different initial values (e.g. after "Clear filters"
+  // navigates to /events with no params), reflect that in the controls —
+  // useState alone would ignore the changed props.
+  useEffect(() => {
+    setWhere(initialWhere);
+    setDate(initialDate || null);
+    setSeats(initialSeats ?? 0);
+  }, [initialWhere, initialDate, initialSeats]);
+
   // Close popovers on outside click / Escape.
   useEffect(() => {
     function onPointerDown(e: PointerEvent) {
