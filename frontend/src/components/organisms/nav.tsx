@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
-import { Avatar, Button, Logo, ThemeToggle } from '@/components/atoms';
+import { Button, Logo, ThemeToggle } from '@/components/atoms';
+import { AccountMenu, type UserRole } from './account-menu';
 
 export interface NavLink {
   href: string;
@@ -10,18 +11,16 @@ export interface NavLink {
 
 export interface NavProps {
   links?: NavLink[];
-  /** When provided, shows the avatar; otherwise shows Log in / Sign up. */
-  user?: { name: string; avatarSeed: number } | null;
-  /** Where the avatar links — the user's portal home (role-dependent). */
-  accountHref?: string;
+  /** When provided, shows the account menu; otherwise shows Log in / Sign up. */
+  user?: { name: string; avatarSeed: number; role: UserRole } | null;
 }
 
 /** Sticky top navigation. Presentational — links + auth state passed in. */
-export function Nav({ links = [], user = null, accountHref = '/guest/dashboard' }: NavProps) {
+export function Nav({ links = [], user = null }: NavProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-[var(--nav-bg)] backdrop-blur-[14px]">
       <div className="mx-auto flex h-[72px] max-w-[1240px] items-center gap-[22px] px-8">
-        <Link href="/" aria-label="Home Restaurant — home">
+        <Link href="/" aria-label="Ratatouille — home">
           <Logo size={20} />
         </Link>
 
@@ -46,9 +45,7 @@ export function Nav({ links = [], user = null, accountHref = '/guest/dashboard' 
         <div className="flex items-center gap-3">
           <ThemeToggle />
           {user ? (
-            <Link href={accountHref} aria-label="Your account">
-              <Avatar seed={user.avatarSeed} name={user.name} size={42} ring />
-            </Link>
+            <AccountMenu name={user.name} avatarSeed={user.avatarSeed} role={user.role} />
           ) : (
             <>
               <Link href="/login">

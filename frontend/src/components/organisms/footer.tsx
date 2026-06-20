@@ -45,7 +45,7 @@ export function Footer() {
         </div>
         <div className="my-[28px] h-px bg-line" />
         <div className="flex flex-col justify-between gap-3 text-[12.5px] text-text-3 sm:flex-row">
-          <span>© 2026 Home Restaurant · Inbar Halutzy &amp; Ran Eckstein</span>
+          <span>© 2026 Ratatouille · Inbar Halutzy &amp; Ran Eckstein</span>
           <span className="flex gap-[18px]">
             <Link href="/trust-and-safety">Privacy</Link>
             <Link href="/trust-and-safety">Terms</Link>

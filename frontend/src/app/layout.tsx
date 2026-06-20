@@ -19,8 +19,8 @@ const sans = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Home Restaurant',
-  description: 'Book a seat at intimate dinners cooked by verified home chefs.',
+  title: 'Ratatouille — Anyone can cook',
+  description: 'Anyone can cook. Book a seat at intimate dinners cooked by verified home chefs.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

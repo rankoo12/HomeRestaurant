@@ -226,7 +226,7 @@ export default function ComponentsPreviewPage() {
         <Section title="Organisms — Hero">
           <div className="overflow-hidden rounded-lg">
             <Hero
-              kicker="A seat at someone's table"
+              kicker="Anyone can cook"
               title={<>Dinner is ready in someone&apos;s home tonight</>}
               subtitle="Book a place at intimate dinners cooked by verified home chefs."
               actions={<Button size="lg">Explore tonight&apos;s dinners</Button>}

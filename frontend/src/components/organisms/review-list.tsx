@@ -20,7 +20,7 @@ export function ReviewList({
   const [notice, setNotice] = useState<string | null>(null);
 
   async function report(reviewId: string) {
-    if (!window.confirm('Report this review to the Home Restaurant team?')) return;
+    if (!window.confirm('Report this review to the Ratatouille team?')) return;
     try {
       const res = await fetch(`/api/proxy/reviews/${reviewId}/flag`, { method: 'POST' });
       if (res.status === 401) {

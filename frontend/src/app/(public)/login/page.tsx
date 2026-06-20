@@ -46,7 +46,7 @@ export default function LoginPage() {
   return (
     <section className="mx-auto mt-20 max-w-[380px] px-6">
       <h1 className="mb-2 font-serif text-[30px]">Welcome back</h1>
-      <p className="mb-6 text-text-2">Log in to your Home Restaurant account.</p>
+      <p className="mb-6 text-text-2">Log in to your Ratatouille account.</p>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
         <Input
