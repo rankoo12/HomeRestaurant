@@ -12,13 +12,23 @@ import { PostgresUserRepository } from '../../modules/identity/postgres.user-rep
  * resubmission require the host role. See
  * docs/specs/chef-onboarding-and-verification.md §4.
  */
+// An uploaded image as a base64 data URL (jpeg/png/webp), capped to keep the
+// JSON payload sane (~2.7MB encoded ≈ 2MB original). Stored inline as the
+// verification's document reference so the admin queue can display it.
+const imageDataUrl = z
+  .string()
+  .regex(/^data:image\/(png|jpe?g|webp);base64,/, 'Must be a PNG, JPEG, or WebP image')
+  .max(2_700_000, 'Image is too large (max ~2MB)');
+
 const idDocumentSchema = z.object({
   kind: z.enum(['passport', 'drivers_license', 'national_id']),
   reference: z.string().min(4).max(64),
+  image: imageDataUrl.optional(),
 });
 const foodSafetySchema = z.object({
   declared: z.literal(true),
   certificateRef: z.string().min(2).max(64).optional(),
+  image: imageDataUrl.optional(),
 });
 
 const submitSchema = z.object({

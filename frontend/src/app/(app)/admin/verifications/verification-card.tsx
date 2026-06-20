@@ -23,6 +23,7 @@ export function VerificationCard({ item }: { item: AdminVerificationItemDto }) {
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState<'approve' | 'reject' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   async function decide(action: 'approve' | 'reject') {
     if (action === 'approve' && !window.confirm(`Approve ${item.name}? They can publish dinners immediately.`)) {
@@ -98,19 +99,37 @@ export function VerificationCard({ item }: { item: AdminVerificationItemDto }) {
               KYC submissions (full history)
             </span>
             <ul className="flex flex-col gap-1">
-              {item.verifications.map((v) => (
-                <li key={v.id} className="flex flex-wrap items-center gap-2">
-                  <Icon name={v.kind === 'id_document' ? 'shield' : 'check'} size={14} />
-                  <span>{KIND_LABEL[v.kind] ?? v.kind}</span>
-                  <span className="text-text-3">
-                    {v.documentRef ?? 'no reference'} · {formatDateLabel(v.createdAt)}
-                  </span>
-                  <Badge tone={v.status === 'approved' ? 'verified' : v.status === 'pending' ? 'gold' : 'soon'}>
-                    {v.status}
-                  </Badge>
-                  {v.notes && <span className="text-text-3">“{v.notes}”</span>}
-                </li>
-              ))}
+              {item.verifications.map((v) => {
+                const imageSrc = v.documentRef?.startsWith('data:image/') ? v.documentRef : null;
+                return (
+                  <li key={v.id} className="flex flex-wrap items-center gap-2">
+                    <Icon name={v.kind === 'id_document' ? 'shield' : 'check'} size={14} />
+                    <span>{KIND_LABEL[v.kind] ?? v.kind}</span>
+                    {imageSrc ? (
+                      <button
+                        type="button"
+                        onClick={() => setLightbox(imageSrc)}
+                        className="inline-flex items-center gap-1.5 text-gold underline-offset-2 hover:underline"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- inline base64 KYC image */}
+                        <img
+                          src={imageSrc}
+                          alt="KYC document"
+                          className="h-10 w-14 rounded border border-line object-cover"
+                        />
+                        view full
+                      </button>
+                    ) : (
+                      <span className="text-text-3">{v.documentRef ?? 'no reference'}</span>
+                    )}
+                    <span className="text-text-3">· {formatDateLabel(v.createdAt)}</span>
+                    <Badge tone={v.status === 'approved' ? 'verified' : v.status === 'pending' ? 'gold' : 'soon'}>
+                      {v.status}
+                    </Badge>
+                    {v.notes && <span className="text-text-3">“{v.notes}”</span>}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
@@ -151,6 +170,31 @@ export function VerificationCard({ item }: { item: AdminVerificationItemDto }) {
         <p role="alert" className="text-right text-xs text-terra">
           {error}
         </p>
+      )}
+
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Document preview"
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/80 p-6 backdrop-blur-sm"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- inline base64 KYC image */}
+          <img
+            src={lightbox}
+            alt="KYC document full view"
+            className="max-h-[85vh] max-w-[90vw] rounded-lg border border-line object-contain shadow-pop"
+          />
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            aria-label="Close"
+            className="absolute right-6 top-6 grid h-10 w-10 place-items-center rounded-full bg-surface text-text shadow-pop"
+          >
+            <Icon name="plus" size={20} className="rotate-45" />
+          </button>
+        </div>
       )}
     </article>
   );
