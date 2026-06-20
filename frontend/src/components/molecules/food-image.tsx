@@ -5,16 +5,37 @@ export interface FoodImageProps {
   seed?: number;
   glyph?: boolean;
   vignette?: boolean;
+  /** Uploaded photo (base64 data URL). When set, shown instead of the gradient. */
+  src?: string | null;
+  /** Accessible description for an uploaded photo (ignored for the gradient). */
+  alt?: string;
   children?: React.ReactNode;
 }
 
 /**
- * Editorial food-photo placeholder — a per-seed warm duotone gradient with a
- * faint monoline glyph and vignette. Self-contained (no external images). The
- * gradient is dynamic generated content, so it uses inline backgrounds (the
- * documented exception to no-inline-styles). Fills its positioned parent.
+ * Editorial food image. Renders an uploaded photo when `src` is provided,
+ * otherwise a per-seed warm duotone gradient placeholder (the documented
+ * inline-style exception — generated content). Fills its positioned parent.
  */
-export function FoodImage({ seed = 0, glyph = true, vignette = true, children }: FoodImageProps) {
+export function FoodImage({ seed = 0, glyph = true, vignette = true, src, alt, children }: FoodImageProps) {
+  if (src) {
+    return (
+      <div className="relative h-full w-full overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element -- inline base64 upload, not a remote asset */}
+        <img src={src} alt={alt ?? ''} className="h-full w-full object-cover" />
+        {vignette && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(130% 110% at 50% 30%, transparent 52%, rgba(0,0,0,.42))',
+            }}
+          />
+        )}
+        {children}
+      </div>
+    );
+  }
+
   const g = gradAt(seed);
   const gl = FOOD_GLYPHS[(seed * 3) % FOOD_GLYPHS.length]!;
   const ang = 120 + ((seed * 37) % 90);

@@ -39,10 +39,10 @@ export default async function LandingPage() {
       <SiteNav />
 
       <Hero
-        kicker="A seat at someone's table"
+        kicker="Anyone can cook"
         title={
           <>
-            Dinner is ready in <span className="italic text-[#F2BE72]">someone&apos;s home</span> tonight
+            Anyone can <span className="italic text-[#F2BE72]">cook</span> — come taste tonight
           </>
         }
         subtitle="Book a place at intimate dinners cooked by verified home chefs — from a five-seat kaiseki counter to a loud, generous jollof table."

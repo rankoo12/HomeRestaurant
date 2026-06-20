@@ -34,7 +34,10 @@ export default async function EventDetailPage({
   const { chef } = event;
   const dateLabel = formatDateLabel(event.startsAt);
   const timeLabel = formatTimeLabel(event.startsAt);
-  const gallery = [event.imageSeed, (event.imageSeed + 1) % 8, (event.imageSeed + 3) % 8, (event.imageSeed + 5) % 8];
+  // Real gallery — exactly the photos the host uploaded (cover first).
+  const photos = event.photos ?? [];
+  const cover = photos[0] ?? null;
+  const rest = photos.slice(1);
 
   return (
     <>
@@ -45,22 +48,30 @@ export default async function EventDetailPage({
           <Icon name="chevL" size={15} /> All dinners
         </Link>
 
-        {/* gallery */}
-        <div className="grid h-[350px] grid-cols-[2fr_1fr_1fr] grid-rows-2 gap-2.5 overflow-hidden rounded-lg">
-          <div className="relative row-span-2">
-            <FoodImage seed={gallery[0]!} glyph={false} />
-            <span className="absolute left-4 top-4">
-              <Badge tone="gold">
-                <Icon name="cam" size={13} /> 12 photos
-              </Badge>
-            </span>
-          </div>
-          {gallery.slice(1).map((s, i) => (
-            <div key={i} className="relative">
-              <FoodImage seed={s} />
+        {/* gallery — only the host's real photos */}
+        {rest.length > 0 ? (
+          <div className="grid h-[350px] grid-cols-[2fr_1fr_1fr] grid-rows-2 gap-2.5 overflow-hidden rounded-lg">
+            <div className="relative row-span-2">
+              <FoodImage seed={event.imageSeed} glyph={false} src={cover} alt={event.title} />
+              {photos.length > 1 && (
+                <span className="absolute left-4 top-4">
+                  <Badge tone="gold">
+                    <Icon name="cam" size={13} /> {photos.length} photos
+                  </Badge>
+                </span>
+              )}
             </div>
-          ))}
-        </div>
+            {rest.slice(0, 4).map((p, i) => (
+              <div key={i} className="relative">
+                <FoodImage seed={event.imageSeed} src={p} alt={`${event.title} photo ${i + 2}`} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="h-[350px] overflow-hidden rounded-lg">
+            <FoodImage seed={event.imageSeed} glyph={false} src={cover} alt={event.title} />
+          </div>
+        )}
 
         {/* body */}
         <div className="mt-9 grid items-start gap-12 md:grid-cols-[1fr_380px]">

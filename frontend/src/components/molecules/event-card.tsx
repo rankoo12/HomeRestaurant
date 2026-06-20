@@ -25,7 +25,7 @@ export function EventCard({ event, onOpen, compact = false }: EventCardProps) {
       className="group block w-full overflow-hidden rounded-lg border border-line bg-surface text-left transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold-line)]"
     >
       <div className={cn('relative', compact ? 'aspect-[16/10]' : 'aspect-[16/11]')}>
-        <FoodImage seed={event.imageSeed} />
+        <FoodImage seed={event.imageSeed} src={event.coverPhoto} alt={event.title} />
         <div className="absolute left-[13px] top-[13px] flex items-center gap-2">
           {low && <Badge tone="soon">Almost full</Badge>}
           {chef.superhost && <Badge tone="gold">Superhost</Badge>}

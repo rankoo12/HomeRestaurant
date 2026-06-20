@@ -17,7 +17,7 @@ export function EventFeature({ event, onOpen, reverse = false }: EventFeaturePro
   return (
     <div className="grid min-h-[300px] overflow-hidden rounded-lg border border-line bg-surface md:grid-cols-2">
       <div className={cn('relative min-h-[220px]', reverse ? 'md:order-2' : 'md:order-1')}>
-        <FoodImage seed={event.imageSeed} />
+        <FoodImage seed={event.imageSeed} src={event.coverPhoto} alt={event.title} />
       </div>
       <div
         className={cn(
