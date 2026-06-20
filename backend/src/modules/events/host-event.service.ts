@@ -227,6 +227,10 @@ export class HostEventService {
       priceCents: source.priceCents,
       seatsTotal: source.seatsTotal,
       imageSeed: source.imageSeed,
+      addressLine: source.addressLine,
+      latitude: source.latitude,
+      longitude: source.longitude,
+      photos: source.photos,
       courses: source.courses.map(({ position, name, description }) => ({ position, name, description })),
       tags: source.tags,
     });

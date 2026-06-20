@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { Badge, Icon } from '@/components/atoms';
 import { FoodImage, MetaStat } from '@/components/molecules';
-import { Footer } from '@/components/organisms';
+import { Footer, LocationMap } from '@/components/organisms';
 import { SiteNav } from '@/app/site-nav';
 import { ACCESS_COOKIE } from '@/lib/auth';
 import { ApiError, getBookingView } from '@/lib/api';
@@ -81,13 +81,21 @@ export default async function BookingConfirmationPage({
                 <div className="grid grid-cols-2 gap-[18px]">
                   <MetaStat icon="cal" label="Date" value={`${dateLabel} · ${timeLabel}`} />
                   <MetaStat icon="users" label="Party" value={`${booking.seats} ${booking.seats > 1 ? 'seats' : 'seat'}`} />
-                  <MetaStat icon="pin" label="Directions" value={event.neighborhood} />
+                  <MetaStat icon="pin" label="Area" value={event.neighborhood} />
                   <MetaStat icon="card" label="Paid" value={`$${dollars(booking.totalCents)}`} />
                 </div>
-                <p className="text-[13px] leading-relaxed text-text-3">
-                  The exact address and arrival notes are shared by your host closer to the dinner.
-                  Bring your confirmation code — and your appetite.
-                </p>
+                {event.addressLine ? (
+                  <LocationMap
+                    addressLine={event.addressLine}
+                    latitude={event.latitude ?? null}
+                    longitude={event.longitude ?? null}
+                  />
+                ) : (
+                  <p className="text-[13px] leading-relaxed text-text-3">
+                    Your host will share the exact address shortly. Bring your confirmation code —
+                    and your appetite.
+                  </p>
+                )}
               </div>
             </section>
 

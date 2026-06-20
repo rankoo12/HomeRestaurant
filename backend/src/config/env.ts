@@ -31,6 +31,23 @@ const envSchema = z
     // (the suite injects a FakePaymentGateway); required for real checkout.
     STRIPE_SECRET_KEY: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+    // Demo payments: simulate the full checkout flow (session → pay → confirm
+    // webhook → booking confirmed) with NO Stripe and NO real charge. For demos
+    // and local dev only — never enable in production. When 'true', a
+    // DemoPaymentGateway replaces Stripe even if Stripe keys are absent.
+    PAYMENTS_DEMO_MODE: z.enum(['true', 'false']).optional(),
+    // Email (booking confirmations). When SMTP_* are set, a real email is sent
+    // via nodemailer; otherwise the notifier falls back to structured logging
+    // (the app always runs). MAIL_FROM is the From: header.
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z.coerce.number().int().positive().default(587),
+    SMTP_USER: z.string().min(1).optional(),
+    SMTP_PASS: z.string().min(1).optional(),
+    SMTP_SECURE: z.enum(['true', 'false']).optional(), // true => TLS on connect (port 465)
+    MAIL_FROM: z.string().min(1).default('Home Restaurant <no-reply@homerestaurant.test>'),
+    // Demo only: send every booking email to this address instead of the guest's
+    // (seeded guests use fake addresses that would bounce). Unset in production.
+    DEMO_EMAIL_OVERRIDE: z.string().email().optional(),
     // Single source of truth for the service fee — UI and charge can't disagree.
     SERVICE_FEE_RATE: z.coerce.number().min(0).max(1).default(0.1),
     // Base for Stripe success/cancel URLs; falls back to CORS_ORIGIN.

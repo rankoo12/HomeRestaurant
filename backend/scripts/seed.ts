@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { deflateSync } from 'node:zlib';
 import { loadEnv } from '../src/config/env.js';
 import { hashPassword } from '../src/modules/identity/password.js';
 import { PostgresUserRepository } from '../src/modules/identity/postgres.user-repository.js';
@@ -21,6 +22,68 @@ import {
  * Runs inside one transaction. Not for production data.
  */
 const DEMO_PASSWORD = 'Demo1234'; // documented in backend/README.md — dev seed only
+
+// Warm palette to give each seeded event a real (if simple) stored photo, so
+// "every event has at least one photo" holds without embedding huge blobs.
+const SEED_COLORS: ReadonlyArray<[number, number, number]> = [
+  [194, 90, 51], // terracotta
+  [162, 63, 28], // burnt sienna
+  [94, 122, 71], // olive
+  [123, 45, 42], // wine
+  [197, 136, 42], // amber
+  [108, 87, 64], // taupe
+];
+
+function crc32(buf: Buffer): number {
+  let c = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    c ^= buf[i]!;
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
+  }
+  return ~c >>> 0;
+}
+
+function pngChunk(type: string, data: Buffer): Buffer {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length, 0);
+  const typeBuf = Buffer.from(type, 'ascii');
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0);
+  return Buffer.concat([len, typeBuf, data, crc]);
+}
+
+/** Build a tiny solid-color PNG as a base64 data URL (an actual image, not a gradient div). */
+function solidPng([r, g, b]: [number, number, number], size = 24): string {
+  const sig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // color type: truecolor RGB
+  const row = Buffer.concat([Buffer.from([0]), Buffer.concat(Array.from({ length: size }, () => Buffer.from([r, g, b])))]);
+  const raw = Buffer.concat(Array.from({ length: size }, () => row));
+  const png = Buffer.concat([
+    sig,
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+  return `data:image/png;base64,${png.toString('base64')}`;
+}
+
+/**
+ * Shift the authored seed dates so they're always upcoming relative to "now"
+ * (the prototype dates are fixed in June 2026 and go stale). We preserve the
+ * relative spacing: the earliest authored event is anchored 3 days from now,
+ * and every other event keeps its original offset from that earliest date.
+ */
+const EARLIEST_AUTHORED = Math.min(...SEED_EVENTS.map((e) => new Date(e.startsAt).getTime()));
+const ANCHOR_OFFSET_MS = 3 * 24 * 60 * 60 * 1000; // first dinner ~3 days out
+
+function shiftToUpcoming(authoredIso: string): Date {
+  const offsetFromEarliest = new Date(authoredIso).getTime() - EARLIEST_AUTHORED;
+  return new Date(Date.now() + ANCHOR_OFFSET_MS + offsetFromEarliest);
+}
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -88,13 +151,17 @@ async function main(): Promise<void> {
           cuisine: e.cuisine,
           shortDescription: e.shortDescription,
           neighborhood: e.neighborhood,
+          addressLine: e.addressLine,
+          latitude: e.latitude,
+          longitude: e.longitude,
           status: e.status,
-          startsAt: new Date(e.startsAt),
+          startsAt: shiftToUpcoming(e.startsAt),
           durationMinutes: e.durationMinutes,
           priceCents: e.priceCents,
           seatsTotal: e.seatsTotal,
           seatsBooked: e.seatsBooked,
           imageSeed: e.imageSeed,
+          photos: [solidPng(SEED_COLORS[e.imageSeed % SEED_COLORS.length]!)],
           courses: e.courses,
           tags: e.tags,
         },

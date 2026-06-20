@@ -83,7 +83,7 @@ export default async function ChefProfilePage({
               ))}
             </div>
             <div className="flex flex-col gap-[15px] rounded-lg border border-line bg-surface p-6">
-              <span className="text-sm font-bold">Verified by Home Restaurant</span>
+              <span className="text-sm font-bold">Verified by Ratatouille</span>
               {chef.badges.map((b) => (
                 <div key={b} className="flex items-center gap-[11px] text-[13.5px] text-text-2">
                   <Icon name="check" size={16} stroke={2.2} className="text-sage" /> {b}

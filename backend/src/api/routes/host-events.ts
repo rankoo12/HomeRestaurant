@@ -24,10 +24,23 @@ const createSchema = z.object({
   priceCents: z.number().int().min(1000).max(50000),
   seatsTotal: z.number().int().min(2).max(24),
   imageSeed: z.number().int().min(0).max(64).optional(),
+  addressLine: z.string().min(4).max(200),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
+  photos: z
+    .array(
+      z
+        .string()
+        .regex(/^data:image\/(png|jpe?g|webp);base64,/, 'Must be a PNG, JPEG, or WebP image')
+        .max(2_700_000, 'Image is too large (max ~2MB)'),
+    )
+    .min(1, 'Add at least one photo')
+    .max(6, 'Up to 6 photos'),
   courses: z.array(courseSchema).min(1).max(8),
   tags: z.array(z.string().min(2).max(30)).max(8).default([]),
 });
 
+// Edit: every field optional, but if photos is sent it must still be 1–6.
 const updateSchema = createSchema.partial();
 
 export async function registerHostEventRoutes(

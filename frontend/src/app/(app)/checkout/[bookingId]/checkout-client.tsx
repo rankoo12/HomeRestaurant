@@ -160,7 +160,7 @@ export function CheckoutClient({
       <section className="flex flex-col gap-5 rounded-lg border border-line bg-surface p-6">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
-            <FoodImage seed={event.imageSeed} />
+            <FoodImage seed={event.imageSeed} src={event.coverPhoto} alt={event.title} />
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="font-serif text-lg leading-snug">{event.title}</span>

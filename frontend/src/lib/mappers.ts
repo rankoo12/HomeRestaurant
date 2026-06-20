@@ -34,6 +34,7 @@ export function toEventCardModel(dto: EventListItemDto): EventCardModel {
     seatsLeft: dto.seatsLeft,
     seatsTotal: dto.seatsTotal,
     imageSeed: dto.imageSeed,
+    coverPhoto: dto.coverPhoto,
     chef: {
       name: dto.chef.name,
       cuisine: dto.cuisine,

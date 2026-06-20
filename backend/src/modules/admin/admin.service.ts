@@ -11,6 +11,7 @@ import type {
   PayoutRepository,
 } from '../payments/interfaces.js';
 import type { FlaggedReview, ReviewRepository } from '../reviews/interfaces.js';
+import type { NotificationService } from '../notifications/interfaces.js';
 import type { AdminActionLogger, AdminMetrics, AdminMetricsRepository } from './interfaces.js';
 
 /** Badge labels granted on approval, by submitted KYC kind (onboarding spec §11). */
@@ -48,6 +49,7 @@ export class AdminService {
     private readonly metrics: AdminMetricsRepository,
     private readonly refreshStore: RefreshStore,
     private readonly log: AdminActionLogger,
+    private readonly notifier: NotificationService,
   ) {}
 
   // --- Dashboard -----------------------------------------------------------
@@ -86,6 +88,13 @@ export class AdminService {
     });
     if (decision.changed) {
       this.log({ adminId, chefId, action: 'verification.approve' }, 'admin: chef approved');
+      // Fire-and-forget approval email (never fail the decision on notify error).
+      const host = await this.users.findById(chefId);
+      void this.notifier.hostApproved({
+        hostId: chefId,
+        hostName: host?.fullName ?? 'there',
+        chefSlug: decision.profile.slug,
+      });
     }
     return decision;
   }

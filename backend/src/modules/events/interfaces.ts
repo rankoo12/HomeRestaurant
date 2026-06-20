@@ -12,6 +12,11 @@ export interface EventUpdate {
   priceCents?: number;
   seatsTotal?: number;
   imageSeed?: number;
+  addressLine?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  /** Full replacement of the gallery when provided (min 1 enforced by the API). */
+  photos?: string[];
   /** Full replacement when provided. */
   courses?: Array<Omit<EventCourse, 'id' | 'eventId'>>;
   tags?: string[];
@@ -21,6 +26,8 @@ export interface EventUpdate {
 export interface HostEventListItem extends Event {
   liveHeldSeats: number;
   confirmedBookings: number;
+  /** Cover photo (first gallery photo), or null. */
+  coverPhoto: string | null;
 }
 
 /** Filters for the discovery listing (Phase 5 builds the API on top of this). */
@@ -59,6 +66,8 @@ export interface EventListItem {
   seatsTotal: number;
   seatsLeft: number;
   imageSeed: number;
+  /** Cover photo (first gallery photo) as a base64 data URL, or null. */
+  coverPhoto: string | null;
   chef: {
     slug: string;
     name: string;

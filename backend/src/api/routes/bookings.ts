@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AppError } from '../../types/index.js';
 import { authenticate } from '../middleware/auth.js';
 import { loadEnv } from '../../config/env.js';
+import { DemoPaymentGateway } from '../../modules/payments/demo.gateway.js';
 import type { ServiceContainer } from '../service-container.js';
 
 /**
@@ -19,7 +20,7 @@ export async function registerBookingRoutes(
   app: FastifyInstance,
   services: ServiceContainer,
 ): Promise<void> {
-  const { bookingService, paymentService, gateway, payments } = services;
+  const { bookingService, paymentService, gateway, payments, bookings } = services;
 
   // Hold churn is rate limited per user (admin spec §9; inert under NODE_ENV=test).
   const abuseLimit = {
@@ -38,6 +39,20 @@ export async function registerBookingRoutes(
       };
     },
   );
+
+  // The signed-in guest's own bookings, split into upcoming and past by event
+  // date. Powers the guest dashboard.
+  app.get('/api/guest/bookings', { preHandler: authenticate }, async (req) => {
+    const all = await bookings.listMineWithEvent(req.user!.sub);
+    const now = Date.now();
+    const upcoming = all
+      .filter((b) => b.eventStartsAt.getTime() >= now && b.bookingStatus !== 'cancelled')
+      .sort((a, b) => a.eventStartsAt.getTime() - b.eventStartsAt.getTime());
+    const past = all.filter(
+      (b) => b.eventStartsAt.getTime() < now || b.bookingStatus === 'cancelled',
+    );
+    return { upcoming, past };
+  });
 
   app.get('/api/bookings/:bookingId', { preHandler: authenticate }, async (req) => {
     const { bookingId } = req.params as { bookingId: string };
@@ -81,6 +96,34 @@ export async function registerBookingRoutes(
       );
     },
   );
+
+  // Demo-only: simulate paying / declining the hosted checkout. Drives the SAME
+  // PaymentService.handleWebhook path a real Stripe delivery would, so booking
+  // confirmation/refund logic is genuinely exercised — just without Stripe or a
+  // charge. Guarded by PAYMENTS_DEMO_MODE + auth + booking ownership.
+  if (loadEnv().PAYMENTS_DEMO_MODE === 'true') {
+    const demoSchema = z.object({ outcome: z.enum(['succeeded', 'failed']) });
+    app.post(
+      '/api/bookings/:bookingId/demo-pay',
+      { preHandler: authenticate },
+      async (req) => {
+        if (!paymentService || !(gateway instanceof DemoPaymentGateway)) {
+          throw new AppError('INVALID_BOOKING_STATE', 'Demo payments are not active.');
+        }
+        const { bookingId } = req.params as { bookingId: string };
+        const { outcome } = demoSchema.parse(req.body);
+
+        // Ownership check (admins allowed) — mirrors the booking endpoints.
+        const view = await bookingService.getView(bookingId, req.user!.sub, req.user!.role === 'admin');
+        const paymentIntentId = `pi_demo_${bookingId.slice(0, 8)}`;
+        const event = gateway.verifyWebhook(
+          DemoPaymentGateway.buildEventBody(outcome, bookingId, paymentIntentId),
+        );
+        const result = await paymentService.handleWebhook(event);
+        return { ok: true, outcome: result, bookingStatus: view.booking.status };
+      },
+    );
+  }
 
   // Stripe webhook — public (signature IS the auth), raw body for verification.
   // Registered in an encapsulated scope so the buffer parser applies only here.

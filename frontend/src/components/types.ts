@@ -16,6 +16,8 @@ export interface EventCardModel {
   seatsLeft: number;
   seatsTotal: number;
   imageSeed: number;
+  /** Cover photo (base64 data URL) when the event has one; else gradient by seed. */
+  coverPhoto?: string | null;
   short?: string;
   chef: {
     name: string;
