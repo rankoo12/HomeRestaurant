@@ -15,6 +15,7 @@ describe('LogNotificationService', () => {
       startsAt: new Date('2026-06-07T22:30:00Z'),
       seats: 2,
       totalCents: 14960,
+      addressLine: '123 Greene Ave, Brooklyn, NY 11216',
     });
 
     expect(lines).toHaveLength(1);
