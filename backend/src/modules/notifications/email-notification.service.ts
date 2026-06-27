@@ -55,6 +55,12 @@ export class EmailNotificationService implements NotificationService {
       port: config.port,
       secure: config.secure,
       auth: { user: config.user, pass: config.pass },
+      // Fail fast on a blocked/slow SMTP path (some PaaS networks throttle
+      // outbound SMTP) instead of hanging for the OS default. Sends are
+      // fire-and-forget, so a timeout just logs and moves on.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
     });
   }
 

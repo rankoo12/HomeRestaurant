@@ -197,25 +197,31 @@ export class PaymentService {
     }
 
     if ('notifyBookingId' in result && result.notifyBookingId) {
-      // Fire-and-forget: a notify failure must never fail the webhook.
-      try {
-        const booking = await this.bookings.findById(result.notifyBookingId);
-        const event_ = booking ? await this.events.findById(booking.eventId) : null;
-        if (booking && event_) {
-          await this.notifier.bookingConfirmed({
-            bookingId: booking.id,
-            confirmationCode: booking.confirmationCode,
-            guestId: booking.guestId,
-            eventTitle: event_.title,
-            startsAt: event_.startsAt,
-            seats: booking.seats,
-            totalCents: booking.totalCents,
-            addressLine: event_.addressLine,
-          });
+      // Truly fire-and-forget: the confirmation is already committed, so the
+      // email must never block (or fail) the webhook response. A slow SMTP
+      // handshake here would otherwise hang the guest's pay request. We don't
+      // await — the send runs in the background and logs its own outcome.
+      const notifyBookingId = result.notifyBookingId;
+      void (async () => {
+        try {
+          const booking = await this.bookings.findById(notifyBookingId);
+          const event_ = booking ? await this.events.findById(booking.eventId) : null;
+          if (booking && event_) {
+            await this.notifier.bookingConfirmed({
+              bookingId: booking.id,
+              confirmationCode: booking.confirmationCode,
+              guestId: booking.guestId,
+              eventTitle: event_.title,
+              startsAt: event_.startsAt,
+              seats: booking.seats,
+              totalCents: booking.totalCents,
+              addressLine: event_.addressLine,
+            });
+          }
+        } catch {
+          // Logged delivery is best-effort; the confirmation itself is committed.
         }
-      } catch {
-        // Logged delivery is best-effort; the confirmation itself is committed.
-      }
+      })();
     }
     return result.outcome;
   }
