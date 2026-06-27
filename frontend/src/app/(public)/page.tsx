@@ -5,22 +5,26 @@ import { Footer, Hero } from '@/components/organisms';
 import { SiteNav } from '@/app/site-nav';
 import { listEvents } from '@/lib/api';
 import { toEventCardModel } from '@/lib/mappers';
+import { chefPhoto } from '@/lib/chef-photos';
 
 export const dynamic = 'force-dynamic';
 
 const HOW_IT_WORKS = [
   {
     icon: 'shield' as const,
+    img: '/how-it-works/verified.jpg',
     h: 'Every host is verified',
     d: 'ID checks, food-safety certification and a kitchen inspection before a single seat goes on sale.',
   },
   {
     icon: 'lock' as const,
+    img: '/how-it-works/pay.jpg',
     h: 'Pay securely, in seconds',
     d: 'Your card is charged only when a seat is confirmed. Full refund if a host cancels.',
   },
   {
     icon: 'users' as const,
+    img: '/how-it-works/table.jpg',
     h: 'Sit down with strangers',
     d: "Communal tables and chef's counters designed for conversation, not just a meal.",
   },
@@ -47,6 +51,7 @@ export default async function LandingPage() {
         }
         subtitle="Book a place at intimate dinners cooked by verified home chefs — from a five-seat kaiseki counter to a loud, generous jollof table."
         imageSeed={feature?.imageSeed ?? 16}
+        src="/hero/home.jpg"
         actions={
           <Link href="/events">
             <Button size="lg">
@@ -96,12 +101,17 @@ export default async function LandingPage() {
           </div>
           <div className="grid gap-5 md:grid-cols-3">
             {HOW_IT_WORKS.map((s) => (
-              <div key={s.h} className="flex flex-col gap-3.5 rounded-lg border border-line bg-surface p-7">
-                <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-gold-soft text-gold-2">
-                  <Icon name={s.icon} size={22} />
+              <div key={s.h} className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
+                <div className="relative h-[160px]">
+                  <FoodImage src={s.img} alt={s.h} vignette={false} />
                 </div>
-                <h3 className="font-serif text-xl">{s.h}</h3>
-                <p className="text-sm leading-relaxed text-text-2">{s.d}</p>
+                <div className="flex flex-col gap-3.5 p-7">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-gold-soft text-gold-2">
+                    <Icon name={s.icon} size={22} />
+                  </div>
+                  <h3 className="font-serif text-xl">{s.h}</h3>
+                  <p className="text-sm leading-relaxed text-text-2">{s.d}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -120,9 +130,9 @@ export default async function LandingPage() {
                 className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface"
               >
                 <div className="relative h-[150px]">
-                  <FoodImage seed={c.avatarSeed + 10} />
+                  <FoodImage seed={c.avatarSeed + 10} src={chefPhoto(c.slug)} alt={c.name} />
                   <div className="absolute -bottom-[22px] left-[18px]">
-                    <Avatar seed={c.avatarSeed} name={c.name} size={56} ring />
+                    <Avatar seed={c.avatarSeed} name={c.name} size={56} ring src={chefPhoto(c.slug)} />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 px-[18px] pb-5 pt-[30px]">

@@ -5,6 +5,7 @@ import { FoodImage, MetaStat } from '@/components/molecules';
 import { Footer, ReviewList } from '@/components/organisms';
 import { SiteNav } from '@/app/site-nav';
 import { getEvent, ApiError } from '@/lib/api';
+import { chefPhoto } from '@/lib/chef-photos';
 import { dollars, formatDateLabel, formatTimeLabel, toReviewModel } from '@/lib/mappers';
 import { BookingWidget } from './booking-widget';
 
@@ -101,7 +102,7 @@ export default async function EventDetailPage({
               className="flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-[18px]"
             >
               <div className="flex items-center gap-4">
-                <Avatar seed={chef.avatarSeed} name={chef.name} size={56} ring />
+                <Avatar seed={chef.avatarSeed} name={chef.name} size={56} ring src={chefPhoto(chef.slug)} />
                 <div className="flex flex-col gap-1">
                   <span className="flex items-center gap-[7px] text-base font-semibold">
                     {chef.name} <VerifiedPill />

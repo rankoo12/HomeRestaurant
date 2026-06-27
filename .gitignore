@@ -53,3 +53,6 @@ Thumbs.db
 .docker/
 pgdata/
 redisdata/
+
+# Raw source images (Gemini exports) — optimized copies live in frontend/public and backend/scripts/seed-photos
+/photos/

@@ -5,20 +5,22 @@ export interface HeroProps {
   title: React.ReactNode;
   subtitle?: string;
   imageSeed?: number;
+  /** Real backdrop photo. When set, shown instead of the per-seed gradient. */
+  src?: string | null;
   actions?: React.ReactNode;
   /** Optional element overlaid at the bottom (e.g. a floating SearchBar). */
   floating?: React.ReactNode;
 }
 
 /** Full-bleed landing hero over a food-image backdrop. */
-export function Hero({ kicker, title, subtitle, imageSeed = 16, actions, floating }: HeroProps) {
+export function Hero({ kicker, title, subtitle, imageSeed = 16, src, actions, floating }: HeroProps) {
   return (
     // Not clipped, so a floating search bar can overhang the bottom edge.
     // Extra bottom margin reserves room for that overhang (≈ half the bar).
     <section className={`relative h-[560px] ${floating ? 'mb-10' : ''}`}>
       {/* clipped backdrop layers */}
       <div className="absolute inset-0 overflow-hidden">
-        <FoodImage seed={imageSeed} glyph={false} vignette={false} />
+        <FoodImage seed={imageSeed} glyph={false} vignette={false} src={src} />
         <div
           className="absolute inset-0"
           style={{

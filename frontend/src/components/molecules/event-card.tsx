@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
+import { chefPhoto } from '@/lib/chef-photos';
 import { Avatar, Badge, Icon, Price } from '@/components/atoms';
 import { FoodImage } from './food-image';
 import type { EventCardModel } from '@/components/types';
@@ -43,7 +44,7 @@ export function EventCard({ event, onOpen, compact = false }: EventCardProps) {
           <Icon name="heart" size={17} filled={liked} className={liked ? 'text-terra' : undefined} />
         </span>
         <div className="absolute bottom-[13px] left-[13px] flex items-center gap-[9px]">
-          <Avatar seed={chef.avatarSeed} name={chef.name} size={34} />
+          <Avatar seed={chef.avatarSeed} name={chef.name} size={34} src={chefPhoto(chef.slug)} />
           <div className="flex flex-col">
             <span className="whitespace-nowrap text-[13px] font-semibold text-white">{chef.name}</span>
             <span className="text-[11.5px] text-white/70">{event.cuisine}</span>

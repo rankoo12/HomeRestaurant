@@ -37,6 +37,7 @@ export function toEventCardModel(dto: EventListItemDto): EventCardModel {
     coverPhoto: dto.coverPhoto,
     chef: {
       name: dto.chef.name,
+      slug: dto.chef.slug,
       cuisine: dto.cuisine,
       rating: dto.chef.rating,
       avatarSeed: dto.chef.avatarSeed,

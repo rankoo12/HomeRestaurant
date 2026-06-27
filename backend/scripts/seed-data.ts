@@ -40,6 +40,8 @@ export interface SeedEvent {
   status: 'published';
   courses: Array<{ position: number; name: string; description: string }>;
   tags: string[];
+  /** Filenames under backend/scripts/seed-photos/ — real cuisine-matched covers. */
+  photos: string[];
 }
 
 export interface SeedReview {
@@ -67,10 +69,10 @@ export const SEED_CHEFS: SeedChef[] = [
     badges: ['ID verified', 'Food-safety certified', 'Kitchen inspected'],
   },
   {
-    email: 'luca@homerestaurant.test',
-    fullName: 'Luca Moretti',
+    email: 'lucia@homerestaurant.test',
+    fullName: 'Lucia Moretti',
     avatarSeed: 2,
-    slug: 'luca',
+    slug: 'lucia',
     cuisine: 'Emilian Italian',
     city: 'North End, Boston',
     tagline: "Hand-rolled pasta and a bottle of Lambrusco on a Tuesday. That's the whole pitch.",
@@ -139,10 +141,11 @@ export const SEED_EVENTS: SeedEvent[] = [
       { position: 3, name: 'Sweet', description: 'Coconut puff-puff with hibiscus caramel' },
     ],
     tags: ['Communal table', 'Halal options', 'Vegetarian friendly'],
+    photos: ['food-15.jpg'],
   },
   {
     slug: 'tortellini-tuesday',
-    chefSlug: 'luca',
+    chefSlug: 'lucia',
     title: 'Tortellini in Brodo, Five Courses',
     cuisine: 'Emilian Italian',
     shortDescription:
@@ -165,6 +168,7 @@ export const SEED_EVENTS: SeedEvent[] = [
       { position: 4, name: 'Dolce', description: 'Zuppa inglese, espresso' },
     ],
     tags: ['Wine pairing', 'Hand-rolled pasta', '5 courses'],
+    photos: ['food-7.jpg'],
   },
   {
     slug: 'kaiseki-eight',
@@ -191,6 +195,7 @@ export const SEED_EVENTS: SeedEvent[] = [
       { position: 4, name: 'Mizumono', description: 'Hojicha custard, brown-sugar warabi' },
     ],
     tags: ['Counter seating', 'Pescatarian', 'No phones'],
+    photos: ['food-2.jpg', 'food-9.jpg'],
   },
   {
     slug: 'mole-night',
@@ -216,6 +221,7 @@ export const SEED_EVENTS: SeedEvent[] = [
       { position: 3, name: 'Postre', description: 'Nicuatole, mezcal caramel' },
     ],
     tags: ['Mezcal flight', 'Gluten-free', 'Communal table'],
+    photos: ['food-1.jpg', 'food-4.jpg'],
   },
   {
     slug: 'jollof-friday',
@@ -240,14 +246,15 @@ export const SEED_EVENTS: SeedEvent[] = [
       { position: 2, name: 'Sweet', description: 'Chin-chin, hibiscus sorbet' },
     ],
     tags: ['Small plates', 'Vinyl & highlife', 'Vegan options'],
+    photos: ['food-17.jpg'],
   },
   {
     slug: 'pasta-lab',
-    chefSlug: 'luca',
+    chefSlug: 'lucia',
     title: 'Hands-On Pasta Lab + Dinner',
     cuisine: 'Emilian Italian',
     shortDescription:
-      'Roll your own tortellini alongside Luca, then sit down to eat the spoils with a bottle of Lambrusco.',
+      'Roll your own tortellini alongside Lucia, then sit down to eat the spoils with a bottle of Lambrusco.',
     neighborhood: 'North End, Boston',
     addressLine: '12 Fleet St, Boston, MA 02113',
     latitude: 42.366,
@@ -264,6 +271,7 @@ export const SEED_EVENTS: SeedEvent[] = [
       { position: 2, name: 'Eat', description: 'Your pasta, two ways, plus dessert' },
     ],
     tags: ['Hands-on', 'Bring an apron', 'Wine included'],
+    photos: ['food-14.jpg'],
   },
 ];
 
@@ -298,7 +306,7 @@ export const SEED_REVIEWS: SeedReview[] = [
   },
   {
     eventSlug: 'tortellini-tuesday',
-    chefSlug: 'luca',
+    chefSlug: 'lucia',
     authorEmail: 'sam@homerestaurant.test',
     rating: 4,
     body: "Felt like eating at someone's nonna's house, which is the point. Came for pasta, stayed two extra hours talking.",

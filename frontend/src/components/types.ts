@@ -21,6 +21,7 @@ export interface EventCardModel {
   short?: string;
   chef: {
     name: string;
+    slug?: string;
     cuisine?: string;
     rating: number;
     reviews?: number;

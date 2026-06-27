@@ -1,5 +1,7 @@
 import pg from 'pg';
-import { deflateSync } from 'node:zlib';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadEnv } from '../src/config/env.js';
 import { hashPassword } from '../src/modules/identity/password.js';
 import { PostgresUserRepository } from '../src/modules/identity/postgres.user-repository.js';
@@ -23,52 +25,19 @@ import {
  */
 const DEMO_PASSWORD = 'Demo1234'; // documented in backend/README.md — dev seed only
 
-// Warm palette to give each seeded event a real (if simple) stored photo, so
-// "every event has at least one photo" holds without embedding huge blobs.
-const SEED_COLORS: ReadonlyArray<[number, number, number]> = [
-  [194, 90, 51], // terracotta
-  [162, 63, 28], // burnt sienna
-  [94, 122, 71], // olive
-  [123, 45, 42], // wine
-  [197, 136, 42], // amber
-  [108, 87, 64], // taupe
-];
+// Real cuisine-matched cover photos live alongside this script. Each is read
+// once and embedded as a base64 data URL (matching the host-upload format). The
+// images are pre-optimized (≈85–240KB) so the rows stay well under the 2.7MB cap.
+const PHOTOS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'seed-photos');
+const photoCache = new Map<string, string>();
 
-function crc32(buf: Buffer): number {
-  let c = ~0;
-  for (let i = 0; i < buf.length; i++) {
-    c ^= buf[i]!;
-    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
-  }
-  return ~c >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length, 0);
-  const typeBuf = Buffer.from(type, 'ascii');
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0);
-  return Buffer.concat([len, typeBuf, data, crc]);
-}
-
-/** Build a tiny solid-color PNG as a base64 data URL (an actual image, not a gradient div). */
-function solidPng([r, g, b]: [number, number, number], size = 24): string {
-  const sig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 2; // color type: truecolor RGB
-  const row = Buffer.concat([Buffer.from([0]), Buffer.concat(Array.from({ length: size }, () => Buffer.from([r, g, b])))]);
-  const raw = Buffer.concat(Array.from({ length: size }, () => row));
-  const png = Buffer.concat([
-    sig,
-    pngChunk('IHDR', ihdr),
-    pngChunk('IDAT', deflateSync(raw)),
-    pngChunk('IEND', Buffer.alloc(0)),
-  ]);
-  return `data:image/png;base64,${png.toString('base64')}`;
+function loadPhoto(filename: string): string {
+  const cached = photoCache.get(filename);
+  if (cached) return cached;
+  const buf = readFileSync(join(PHOTOS_DIR, filename));
+  const dataUrl = `data:image/jpeg;base64,${buf.toString('base64')}`;
+  photoCache.set(filename, dataUrl);
+  return dataUrl;
 }
 
 /**
@@ -161,7 +130,7 @@ async function main(): Promise<void> {
           seatsTotal: e.seatsTotal,
           seatsBooked: e.seatsBooked,
           imageSeed: e.imageSeed,
-          photos: [solidPng(SEED_COLORS[e.imageSeed % SEED_COLORS.length]!)],
+          photos: e.photos.map(loadPhoto),
           courses: e.courses,
           tags: e.tags,
         },

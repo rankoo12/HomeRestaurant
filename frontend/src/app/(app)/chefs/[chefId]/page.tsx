@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Avatar, Badge, Icon, VerifiedPill } from '@/components/atoms';
+import { chefPhoto } from '@/lib/chef-photos';
 import { EventCard, FoodImage } from '@/components/molecules';
 import { Footer, ReviewList } from '@/components/organisms';
 import { SiteNav } from '@/app/site-nav';
@@ -53,7 +54,7 @@ export default async function ChefProfilePage({
       <div className="relative mx-auto -mt-[72px] max-w-[1240px] px-8">
         {/* header */}
         <div className="mb-[34px] flex items-end gap-[22px]">
-          <Avatar seed={chef.avatarSeed} name={chef.name} size={128} ring />
+          <Avatar seed={chef.avatarSeed} name={chef.name} size={128} ring src={chefPhoto(chef.slug)} />
           <div className="flex flex-1 flex-col gap-2 pb-1.5">
             <div className="flex items-center gap-[11px]">
               <h1 className="font-serif text-[38px]">{chef.name}</h1>

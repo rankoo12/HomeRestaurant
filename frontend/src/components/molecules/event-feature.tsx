@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/cn';
+import { chefPhoto } from '@/lib/chef-photos';
 import { Avatar, Button, Icon, Price, Stars } from '@/components/atoms';
 import { FoodImage } from './food-image';
 import type { EventCardModel } from '@/components/types';
@@ -31,7 +32,7 @@ export function EventFeature({ event, onOpen, reverse = false }: EventFeaturePro
         <h3 className="font-serif text-[30px] leading-tight">{event.title}</h3>
         {event.short && <p className="text-[14.5px] leading-relaxed text-text-2">{event.short}</p>}
         <div className="flex items-center gap-[11px]">
-          <Avatar seed={chef.avatarSeed} name={chef.name} size={40} />
+          <Avatar seed={chef.avatarSeed} name={chef.name} size={40} src={chefPhoto(chef.slug)} />
           <div className="flex flex-col">
             <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
               {chef.name}
