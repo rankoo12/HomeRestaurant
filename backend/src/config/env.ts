@@ -45,6 +45,12 @@ const envSchema = z
     SMTP_PASS: z.string().min(1).optional(),
     SMTP_SECURE: z.enum(['true', 'false']).optional(), // true => TLS on connect (port 465)
     MAIL_FROM: z.string().min(1).default('Home Restaurant <no-reply@homerestaurant.test>'),
+    // Resend (HTTP email API, port 443). The production email path for hosts
+    // that block outbound SMTP (e.g. Railway). When RESEND_API_KEY is set it
+    // takes precedence over SMTP. RESEND_FROM falls back to MAIL_FROM, then to
+    // Resend's shared test sender (works with no domain setup, for demos).
+    RESEND_API_KEY: z.string().min(1).optional(),
+    RESEND_FROM: z.string().min(1).optional(),
     // Demo only: send every booking email to this address instead of the guest's
     // (seeded guests use fake addresses that would bounce). Unset in production.
     DEMO_EMAIL_OVERRIDE: z.string().email().optional(),

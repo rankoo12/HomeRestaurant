@@ -8,6 +8,7 @@ import { PostgresEventRepository } from '../modules/events/postgres.event-reposi
 import { HostEventService } from '../modules/events/host-event.service.js';
 import { LogNotificationService } from '../modules/notifications/log-notification.service.js';
 import { EmailNotificationService } from '../modules/notifications/email-notification.service.js';
+import { ResendNotificationService } from '../modules/notifications/resend-notification.service.js';
 import { PostgresUserRepository } from '../modules/identity/postgres.user-repository.js';
 import type { NotificationService } from '../modules/notifications/interfaces.js';
 import { PaymentService } from '../modules/payments/payment.service.js';
@@ -43,12 +44,29 @@ export function buildServiceContainer(
   const ledger = new PostgresWebhookEventLedger();
   const chefs = new PostgresChefRepository();
 
-  // Confirmation emails go over SMTP when configured; otherwise fall back to
-  // structured logging so the app always runs (docs/known-issues phase-6).
+  // Confirmation emails: prefer Resend (HTTP API — works where SMTP is blocked,
+  // e.g. Railway), then SMTP, else fall back to structured logging so the app
+  // always runs (docs/known-issues phase-6).
   const logNotify = (payload: Record<string, unknown>, message: string) => log.info(payload, message);
+  const userRepo = new PostgresUserRepository();
+  const recipientLookup = async (userId: string) => {
+    const u = await userRepo.findById(userId);
+    return u ? { email: u.email, fullName: u.fullName } : null;
+  };
   let notifier: NotificationService;
-  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
-    const userRepo = new PostgresUserRepository();
+  if (env.RESEND_API_KEY) {
+    notifier = new ResendNotificationService(
+      {
+        apiKey: env.RESEND_API_KEY,
+        // Resend's shared test sender works with no domain setup (good for demos).
+        from: env.RESEND_FROM ?? env.MAIL_FROM ?? 'Ratatouille <onboarding@resend.dev>',
+        overrideTo: env.DEMO_EMAIL_OVERRIDE,
+      },
+      recipientLookup,
+      logNotify,
+    );
+    log.info({ provider: 'resend' }, 'Email notifications enabled (Resend HTTP API)');
+  } else if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
     notifier = new EmailNotificationService(
       {
         host: env.SMTP_HOST,
@@ -59,10 +77,7 @@ export function buildServiceContainer(
         from: env.MAIL_FROM,
         overrideTo: env.DEMO_EMAIL_OVERRIDE,
       },
-      async (userId) => {
-        const u = await userRepo.findById(userId);
-        return u ? { email: u.email, fullName: u.fullName } : null;
-      },
+      recipientLookup,
       logNotify,
     );
     log.info({ smtpHost: env.SMTP_HOST }, 'Email notifications enabled (SMTP)');
